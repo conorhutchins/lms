@@ -42,6 +42,11 @@ const migrate = async () => {
         status VARCHAR(50),
         prize_fund DECIMAL(10, 2)
       );
+
+        CREATE TABLE IF NOT EXISTS gameweek (
+        id SERIAL PRIMARY KEY,
+        current_gameweek INT NOT NULL
+      );
     `);
 
     console.log('Migration complete!');
