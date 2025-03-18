@@ -2,9 +2,7 @@ import { SessionProvider } from 'next-auth/react';
 import Layout from '../components/layout/Layout';
 import { Sora } from 'next/font/google';
 import '../styles/globals.css'
-
 import type { AppProps } from 'next/app';
-import '../styles/globals.css';
 
 const sora = Sora({
   subsets: ['latin'],
