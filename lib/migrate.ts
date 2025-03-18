@@ -1,5 +1,14 @@
 import pool from './db';
 
+// in this file all we are doing is setting up the database schema 
+
+// users - stores user information
+// fixtures - stores fixture information
+// predictions - stores user predictions
+// payments - stores payment information
+// competition - stores competition information
+
+
 const migrate = async () => {
   try {
     await pool.query(`

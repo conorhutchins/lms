@@ -1,7 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import pool from '../../lib/db'
 import axios from 'axios'
-import { Event } from '../../types/apiTypes'
+import { Event } from '../../types/apiTypes' // type check the data coming from the FPL API
+
+/*
+all that this is doing is fetching the current gameweek from the FPL API
+and then it stores it in the database and gives it back to you 
+*/
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
 if (req.method === 'GET') {

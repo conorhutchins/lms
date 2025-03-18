@@ -1,6 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import pool from '../../lib/db';
 
+/* all that this is doing is fetching the fixtures from the database
+it sets up a route /api/fixtures and then it gets the fixtures from the database
+*/
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     try {
