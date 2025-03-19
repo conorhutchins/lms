@@ -54,12 +54,19 @@ This document describes how the Last Man Standing app is structured, outlining h
 │   │   └── auth
 │   │       └── [...nextauth].ts   // NextAuth routes
 │   ├── dashboard.tsx              // Main dashboard page
+│   ├── _app.tsx              // Wraps everything in a session provider and wraps components in layout
 │   ├── index.tsx                  // Landing page
 │   └── ...
 ├── components
-│   ├── Navbar
-│   │   ├── Navbar.tsx
-│   │   └── Navbar.test.tsx
+│   ├── home
+│   │   └── Hero.tsx
+│   │   ├── Hero.tsx
+│   │   └── HowItWork.tsx
+│   │   └── SignUpSection.tsx
+│   ├── layout
+│   │   └── Footer.tsx
+│   │   ├── Layout.tsx
+│   │   └── NavBar.tsx
 │   ├── TeamSelection
 │   │   ├── TeamSelectionModal.tsx
 │   │   ├── TeamSelectionModal.test.tsx
