@@ -1,17 +1,6 @@
+// pages/api/auth/[...nextauth].ts - API route for NextAuth.js authentication
 import NextAuth from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
-import FacebookProvider from 'next-auth/providers/facebook';
+import { authOptions } from '../../../lib/auth';
 
-// all that is happening in this file is that we are configuring the authentication process using next auth. because of the file name it catches all requests to the auth route
-export default NextAuth({
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_ID!,
-      clientSecret: process.env.FACEBOOK_SECRET!,
-    }),
-  ],
-});
+// All NextAuth requests are handled by this file due to the [...nextauth] filename pattern
+export default NextAuth(authOptions);
