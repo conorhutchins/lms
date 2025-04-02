@@ -1,45 +1,49 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import pool from '../../lib/db'
+import { supabase } from '../../lib/db'
 import axios from 'axios'
 import { Event } from '../../types/apiTypes' // type check the data coming from the FPL API
 
-/*
-all that this is doing is fetching the current gameweek from the FPL API
-and then it stores it in the database and gives it back to you 
-*/
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-if (req.method === 'GET') {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method === 'GET') {
     try {
-
-        // taking the current gameweek from the FPL API
-        const response = await axios.get('https://fantasy.premierleague.com/api/bootstrap-static/')
-        const data = response.data
-        console.log(data.events)
-        //grabbing the id current gameweek and store it in a const
-        const currentGameweek = (data.events as Event[]).find((event) => event.is_current)?.id;
-
-        // if no current gameweek return a 404
-        if (!currentGameweek) {
-            return res.status(404).json({ message: 'No current gameweek not found' })
-        }
+      // Fetch current gameweek data from FPL API
+      const response = await axios.get('https://fantasy.premierleague.com/api/bootstrap-static/')
+      const data = response.data
+      
+      // Find current gameweek
+      const currentGameweek = data.events.find((event: Event) => 
+        event.is_current === true
+      )
+      
+      if (!currentGameweek) {
+        return res.status(404).json({ error: 'Current gameweek not found' })
+      }
+      
+      // If you need to store this in your database
+      const { error } = await supabase
+        .from('gameweeks')
+        .upsert({
+          id: currentGameweek.id,
+          name: currentGameweek.name,
+          deadline_time: currentGameweek.deadline_time,
+          is_current: currentGameweek.is_current,
+          is_next: currentGameweek.is_next,
+          // Add other fields as needed
+        }, {
+          onConflict: 'id' // Upsert based on the id column
+        })
         
-        // put it into my database
-        await pool.query(`
-    
-            INSERT INTO gameweek (current_gameweek) VALUES ($1)
-            ON CONFLICT (id) DO UPDATE SET current_gameweek = $1
-        `, [currentGameweek]);
-
-        res.status(200).json({ message: 'Gameweek updated successfully', currentGameweek })
+      if (error) throw error
+      
+      return res.status(200).json(currentGameweek)
     } catch (error) {
-        console.error('Error fetching gameweek:', error)
-        res.status(500).json({ error: (error as Error).message })
+      console.error('Error fetching gameweek data:', error)
+      return res.status(500).json({ error: 'Failed to fetch gameweek data' })
     }
-    } else {
-        // restrict to only get requests
-        res.setHeader('Allow', ['GET'])
-        // if not a get request inform the user
-        res.status(405).json({ message: `Method ${req.method} Not Allowed` })
-}
+  }
+  
+  return res.status(405).json({ error: 'Method not allowed' })
 }

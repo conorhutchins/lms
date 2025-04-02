@@ -67,7 +67,11 @@ CREATE TABLE payments (
     user_id INTEGER REFERENCES users(id),
     competition_id INTEGER REFERENCES competitions(id),
     amount DECIMAL(10,2),
-    payment_status VARCHAR(50)
+    payment_status VARCHAR(50),
+    payment_type VARCHAR(50),  -- 'entry', 'rebuy', 'free_hit'
+    free_hit_round_id INTEGER REFERENCES rounds(id),  -- Only used for free_hit
+    free_hit_used BOOLEAN DEFAULT false,              -- Only relevant for free_hit
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
