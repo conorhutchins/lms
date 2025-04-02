@@ -1,64 +1,68 @@
-import { Competition } from '../../types/competition';
 import { supabase } from '../../db';
+// Import generated types
+import { Database } from '../../types/supabase';
 
-// No need for Prisma's Decimal type with Supabase
-type CompetitionCreateData = {
-  title: string;
-  entry_fee: number; 
-  start_date: Date;
-  status: string;
-  prize_pot: number;
-  rolled_over?: boolean;
+// Define helper types based on generated ones
+type Competition = Database['public']['Tables']['competitions']['Row'];
+type Round = Database['public']['Tables']['rounds']['Row'];
+type CompetitionCreateData = Database['public']['Tables']['competitions']['Insert'];
+
+// Extend Competition type to potentially include related rounds
+type CompetitionWithRounds = Competition & {
+  rounds: Round[];
 };
 
 // Object that contains all the methods for the competition service
 export const competitionServices = {
   // Use id to find the competition
-  async findCompetitionById(id: number): Promise<Competition | null> {
+  async findCompetitionById(id: string): Promise<CompetitionWithRounds | null> { // Use string for UUID
     const { data, error } = await supabase
       .from('competitions')
-      .select('*, rounds(*)')
+      .select('*, rounds(*)') // Select related rounds
       .eq('id', id)
       .single();
-      
+
     if (error) {
-      console.error('Error fetching competition:', error);
+      console.error('Error fetching competition by id:', error);
       return null;
     }
-    
-    return data;
+
+    // Ensure the structure matches CompetitionWithRounds
+    // Supabase might return rounds as null if none exist
+    return data ? { ...data, rounds: data.rounds || [] } : null;
   },
-  
-  async findActiveCompetitions(): Promise<Competition[]> {
+
+  async findActiveCompetitions(): Promise<CompetitionWithRounds[]> {
     // Find all competitions that are active
     const { data, error } = await supabase
       .from('competitions')
-      .select('*, rounds(*)')
+      .select('*, rounds(*)') // Select related rounds
       .eq('status', 'active');
-      
+
     if (error) {
       console.error('Error fetching active competitions:', error);
       return [];
     }
-    
-    return data || [];
+
+    // Ensure each competition has a rounds array
+    return data?.map(comp => ({ ...comp, rounds: comp.rounds || [] })) || [];
   },
-  
+
   // Insert a new competition into the database
-  async createCompetition(data: CompetitionCreateData): Promise<Competition | null> {
-    const { data: newCompetition, error } = await supabase
+  async createCompetition(competitionData: CompetitionCreateData): Promise<Competition | null> {
+    const { data, error } = await supabase
       .from('competitions')
-      .insert([data])
+      .insert([competitionData])
       .select()
       .single();
-      
+
     if (error) {
       console.error('Error creating competition:', error);
       return null;
     }
-    
-    return newCompetition;
+
+    return data;
   },
-  
-  // Additional methods
+
+  // Additional methods can be added here
 };

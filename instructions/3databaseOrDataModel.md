@@ -1,82 +1,95 @@
-# Database & Data Models
+# Create the file with the markdown content
+cat > instructions/3databaseOrDataModel.md << 'EOL'
+# 3. 🗃️ Database & Data Models (Supabase)
 
 ## Overview
-The application uses PostgreSQL for data storage. For local development, you can use Docker or a managed service.
 
-## Database Tables
+The application uses Supabase PostgreSQL for data storage. For local development, connect via the Supabase CLI or Supabase Studio.
+
+## Tables
 
 ### Users
+
+Supabase provides a built-in `auth.users` table. If you need to store additional user metadata, use a separate profiles table:
+
 ```sql
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255),
-    email VARCHAR(255) UNIQUE,
-    password_hash VARCHAR(255)  -- If storing credentials
+create table profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  name text,
+  created_at timestamp with time zone default now()
 );
 ```
 
 ### Competitions
+
 ```sql
-CREATE TABLE competitions (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(255),
-    entry_fee DECIMAL(10,2),
-    start_date TIMESTAMP,
-    status VARCHAR(50),  -- active, completed
-    prize_pot DECIMAL(10,2),
-    rolled_over BOOLEAN DEFAULT false  -- Flag for when no one wins
+create table competitions (
+  id uuid primary key default gen_random_uuid(),
+  title text,
+  entry_fee numeric(10,2),
+  start_date timestamp with time zone,
+  status text,  -- 'active', 'completed'
+  prize_pot numeric(10,2),
+  rolled_over boolean default false,
+  created_at timestamp with time zone default now()
 );
 ```
 
 ### Rounds
+
 ```sql
-CREATE TABLE rounds (
-    id SERIAL PRIMARY KEY,
-    competition_id INTEGER REFERENCES competitions(id),
-    round_number INTEGER,
-    deadline_date TIMESTAMP
+create table rounds (
+  id uuid primary key default gen_random_uuid(),
+  competition_id uuid references competitions(id) on delete cascade,
+  round_number integer,
+  deadline_date timestamp with time zone,
+  created_at timestamp with time zone default now()
 );
 ```
 
 ### Picks
+
 ```sql
-CREATE TABLE picks (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    round_id INTEGER REFERENCES rounds(id),
-    team_id INTEGER,
-    status VARCHAR(50),  -- active, eliminated
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+create table picks (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  round_id uuid references rounds(id) on delete cascade,
+  team_id uuid references teams(id),
+  status text,  -- 'active', 'eliminated'
+  timestamp timestamp with time zone default now()
 );
 ```
 
 ### Teams
+
 ```sql
-CREATE TABLE teams (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255),
-    league VARCHAR(255)
-    -- Or just store team IDs as provided by the football API
+create table teams (
+  id uuid primary key default gen_random_uuid(),
+  name text,
+  league text
 );
 ```
 
 ### Payments
+
 ```sql
-CREATE TABLE payments (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    competition_id INTEGER REFERENCES competitions(id),
-    amount DECIMAL(10,2),
-    payment_status VARCHAR(50),
-    payment_type VARCHAR(50),  -- 'entry', 'rebuy', 'free_hit'
-    free_hit_round_id INTEGER REFERENCES rounds(id),  -- Only used for free_hit
-    free_hit_used BOOLEAN DEFAULT false,              -- Only relevant for free_hit
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+create table payments (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  competition_id uuid references competitions(id) on delete cascade,
+  amount numeric(10,2),
+  payment_status text,
+  payment_type text,  -- 'entry', 'rebuy', 'free_hit'
+  free_hit_round_id uuid references rounds(id),
+  free_hit_used boolean default false,
+  created_at timestamp with time zone default now()
 );
 ```
 
 ## Notes
-- Adjust or add columns as needed based on specific requirements
-- Consider adding indexes for frequently queried columns
-- Add appropriate foreign key constraints
-- Consider adding timestamps (created_at, updated_at) to all tables
+
+- Use uuid as primary keys for Supabase best practices (`gen_random_uuid()`).
+- Supabase automatically adds `created_at` fields in UI, but you can define explicitly as above.
+- Adjust fields as needed per your application.
+- Use Supabase RLS (Row Level Security) for access control.
+EOL
