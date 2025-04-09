@@ -29,7 +29,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# env files (can opt-in for commiting if needed)
+# env files (can opt-in for committing if needed)
 .env*
 
 # vercel
@@ -48,3 +48,6 @@ next-env.d.ts
 # supabase
 # Supabase CLI temporary files
 supabase/.temp/
+
+# Generated output
+/dist/
