@@ -33,14 +33,6 @@ When you're ready to use current season data:
 - **Development**: Use the 2023 season fixtures (free tier) for building and testing
 - **Production**: Use current season fixtures (paid tier) when launching the app
 
-### Fetch Fixtures (Development Only)
-
-The `fetch-fixtures.js` script is a simpler version that just fetches and saves fixture data to a JSON file without inserting into the database. Useful for debugging API responses.
-
-```bash
-# Run the fetch-only script
-node scripts/fetch-fixtures.js
-```
 
 ## Environment Setup
 

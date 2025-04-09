@@ -59,6 +59,7 @@ export type Database = {
           round: string | null
           season: number
           status: string | null
+          results_processed: boolean | null
         }
         Insert: {
           away_score?: number | null
@@ -76,6 +77,7 @@ export type Database = {
           round?: string | null
           season: number
           status?: string | null
+          results_processed?: boolean | null
         }
         Update: {
           away_score?: number | null
@@ -93,6 +95,7 @@ export type Database = {
           round?: string | null
           season?: number
           status?: string | null
+          results_processed?: boolean | null
         }
         Relationships: []
       }

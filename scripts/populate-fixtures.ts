@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import axios, { AxiosError } from 'axios';
+import type { Database } from '../lib/types/supabase';
 
 // Get the directory name
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -16,7 +17,8 @@ const apiHostMatch = envContent.match(/API_FOOTBALL_HOST=([^\r\n]+)/);
 
 // Extract Supabase values
 const supabaseUrlMatch = envContent.match(/NEXT_PUBLIC_SUPABASE_URL=([^\r\n]+)/);
-const supabaseKeyMatch = envContent.match(/NEXT_PUBLIC_SUPABASE_ANON_KEY=([^\r\n]+)/);
+// Use service role key instead of anon key to bypass RLS
+const supabaseKeyMatch = envContent.match(/SUPABASE_SERVICE_ROLE_KEY=([^\r\n]+)/);
 
 if (!apiKeyMatch) {
   console.error('API_FOOTBALL_KEY not found in .env.local');
@@ -24,25 +26,30 @@ if (!apiKeyMatch) {
 }
 
 if (!supabaseUrlMatch || !supabaseKeyMatch) {
-  console.error('Supabase credentials not found in .env.local');
+  console.error('Supabase credentials not found in .env.local. Make sure SUPABASE_SERVICE_ROLE_KEY is defined.');
   process.exit(1);
 }
 
 // Set the values as environment variables for imports that might need them
 process.env.NEXT_PUBLIC_SUPABASE_URL = supabaseUrlMatch[1];
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = supabaseKeyMatch[1];
+process.env.SUPABASE_SERVICE_ROLE_KEY = supabaseKeyMatch[1];
 
-// Now import Supabase after setting env variables
+// Now it's safe to import the supabase client
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from '../lib/types/supabase.js';
 
-// Create Supabase client directly
+// Create Supabase admin client with service role key
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
+  process.env.SUPABASE_SERVICE_ROLE_KEY as string,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
 );
 
-console.log('Supabase client initialized successfully');
+console.log('Supabase admin client initialized successfully');
 
 // --- Define Interface based on API response ---
 interface ApiFootballFixture {
@@ -118,11 +125,25 @@ function mapApiResponseToDbSchema(apiFixture: ApiFootballFixture): FixtureInsert
     const homeScore = apiFixture.goals ? (apiFixture.goals.home !== null ? Number(apiFixture.goals.home) : null) : null;
     const awayScore = apiFixture.goals ? (apiFixture.goals.away !== null ? Number(apiFixture.goals.away) : null) : null;
 
+    // Extract gameweek/round number from the round string (e.g., "Regular Season - 1" -> 1)
+    let gameweek: number | null = null;
+    if (apiFixture.league?.round) {
+        // Try to extract the number at the end of the round string
+        const roundMatch = apiFixture.league.round.match(/(\d+)$/);
+        if (roundMatch && roundMatch[1]) {
+            gameweek = parseInt(roundMatch[1], 10);
+            if (isNaN(gameweek)) {
+                gameweek = null;
+            }
+        }
+    }
+
     return {
         external_id: Number(apiFixture.fixture.id),
         league_id: Number(apiFixture.league.id),
         season: Number(apiFixture.league.season),
         round: apiFixture.league.round,
+        gameweek: gameweek,  // Add the extracted gameweek number
         home_team: apiFixture.teams.home.name,
         away_team: apiFixture.teams.away.name,
         home_team_id: Number(apiFixture.teams.home.id),
@@ -131,6 +152,7 @@ function mapApiResponseToDbSchema(apiFixture: ApiFootballFixture): FixtureInsert
         status: apiFixture.fixture.status?.short,
         home_score: homeScore,
         away_score: awayScore,
+        results_processed: false, // Default all new fixtures to not processed
     };
 }
 
