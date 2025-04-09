@@ -56,10 +56,10 @@ export type Database = {
           id: string
           kickoff_time: string | null
           league_id: number
+          results_processed: boolean | null
           round: string | null
           season: number
           status: string | null
-          results_processed: boolean | null
         }
         Insert: {
           away_score?: number | null
@@ -74,10 +74,10 @@ export type Database = {
           id?: string
           kickoff_time?: string | null
           league_id: number
+          results_processed?: boolean | null
           round?: string | null
           season: number
           status?: string | null
-          results_processed?: boolean | null
         }
         Update: {
           away_score?: number | null
@@ -92,10 +92,10 @@ export type Database = {
           id?: string
           kickoff_time?: string | null
           league_id?: number
+          results_processed?: boolean | null
           round?: string | null
           season?: number
           status?: string | null
-          results_processed?: boolean | null
         }
         Relationships: []
       }
