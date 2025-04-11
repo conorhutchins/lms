@@ -84,17 +84,7 @@ export default function SignUpPage() {
               </svg>
               <span className="ml-2">Google</span>
             </Button>
-            <Button 
-              variant="outline" 
-              className="w-full h-12 flex items-center justify-center bg-[#1e1e1e] hover:bg-[#2a2a2a] border-[#333] text-white"
-              onClick={() => handleOAuthSignUp('facebook')}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9.19795 21.5H13.198V13.4901H16.8021L17.198 9.50977H13.198V7.5C13.198 6.94772 13.6457 6.5 14.198 6.5H17.198V2.5H14.198C11.4365 2.5 9.19795 4.73858 9.19795 7.5V9.50977H7.19795L6.80206 13.4901H9.19795V21.5Z" />
-              </svg>
-              <span className="ml-2">Facebook</span> 
-            </Button>
-
+            
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-[#333]" />
