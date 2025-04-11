@@ -81,7 +81,10 @@ body {
   * {
     @apply border-border;
     }
+  html {
+    @apply bg-[#000000];
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[#000000] text-[var(--primary-text-color)] min-h-screen; /* Force black background */
     }
 }

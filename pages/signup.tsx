@@ -44,10 +44,10 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex justify-center items-center min-h-[calc(100vh-var(--navbar-height))] w-full bg-black text-white p-4 box-border">
-      <Card className="w-full max-w-md mx-auto bg-[#111111] border-0 shadow-lg my-12">
+    <div className="w-full max-w-md">
+      <Card className="bg-[#111111] border-0 shadow-lg">
         <CardHeader className="text-center pt-10 pb-6">
-          <div className="flex justify-center items-center mb-6">
+          <div className="flex justify-center mb-6">
             <div className="relative w-24 h-24 rounded-full overflow-hidden">
               <Image 
                 src="/images/lastManStandingLogo.jpeg" 
@@ -73,7 +73,7 @@ export default function SignUpPage() {
           <div className="space-y-4">
             <Button 
               variant="outline" 
-              className="w-full h-12 flex items-center justify-center gap-2 bg-[#1e1e1e] hover:bg-[#2a2a2a] border-[#333] text-white rounded-md"
+              className="w-full h-12 flex items-center justify-center bg-[#1e1e1e] hover:bg-[#2a2a2a] border-[#333] text-white"
               onClick={() => handleOAuthSignUp('google')}
             >
               <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -86,7 +86,7 @@ export default function SignUpPage() {
             </Button>
             <Button 
               variant="outline" 
-              className="w-full h-12 flex items-center justify-center gap-2 bg-[#1e1e1e] hover:bg-[#2a2a2a] border-[#333] text-white rounded-md"
+              className="w-full h-12 flex items-center justify-center bg-[#1e1e1e] hover:bg-[#2a2a2a] border-[#333] text-white"
               onClick={() => handleOAuthSignUp('facebook')}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">

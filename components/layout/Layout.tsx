@@ -9,14 +9,17 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const router = useRouter();
-  const showFooter = router.pathname !== '/signup';
+  const showFooter = router.pathname !== '/signup' && router.pathname !== '/login';
+  const isAuthPage = router.pathname === '/signup' || router.pathname === '/login';
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col bg-black">
       <Navbar />
-      <main>{children}</main>
+      <main className={`flex-1 ${isAuthPage ? 'flex items-center justify-center' : ''}`}>
+        {children}
+      </main>
       {showFooter && <Footer />}
-    </>
+    </div>
   );
 };
 
