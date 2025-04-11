@@ -1,10 +1,21 @@
 // components/home/SignUpSection.tsx
-import { signIn } from 'next-auth/react';
+import { createClient } from '@/lib/supabase/client'; // Import client-side creator
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from 'next/image';
 
 export default function SignUpSection() {
+  const supabase = createClient();
+
+  const handleSignUp = async (provider: 'google' | 'facebook') => {
+    await supabase.auth.signInWithOAuth({ 
+        provider: provider,
+        options: {
+            redirectTo: `${window.location.origin}/api/auth/callback` // Corrected path
+        }
+    }); 
+  };
+
   return (
     <section className="py-16 bg-muted/50">
       <div className="container mx-auto px-4">
@@ -31,9 +42,14 @@ export default function SignUpSection() {
                   Make your predictions each week and advance through the rounds. 
                   Join a community of contenders and prove your skills!
                 </p>
-                <Button onClick={() => signIn()} size="lg" className="bg-[#A855F7] hover:bg-[#9333EA] text-white px-8 py-4">
-                  Sign Up Now
-                </Button>
+                <div className="flex gap-4"> {/* Container for buttons */} 
+                  <Button onClick={() => handleSignUp('google')} size="lg" className="bg-[#A855F7] hover:bg-[#9333EA] text-white px-8 py-4 flex-1">
+                    Sign Up with Google
+                  </Button>
+                  <Button onClick={() => handleSignUp('facebook')} size="lg" variant="secondary" className="px-8 py-4 flex-1">
+                    Sign Up with Facebook
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>

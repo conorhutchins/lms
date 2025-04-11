@@ -5,6 +5,7 @@
 :root {
     --background: #000000;
     --primary-text-color: #ffffff;
+    --navbar-height: 70px; /* Approximate height of navbar, adjust based on your design */
 }
 
 @import 'tailwindcss/base';

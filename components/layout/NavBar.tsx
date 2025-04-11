@@ -1,11 +1,14 @@
 // components/layout/Navbar.tsx
 import Link from 'next/link';
-import { useSession, signIn, signOut } from 'next-auth/react';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client'; // Use our client-side creator
+import type { User } from '@supabase/supabase-js'; // Import User type
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
+  navigationMenuTriggerStyle, // Import trigger style for links
 } from "@/components/ui/navigation-menu";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,8 +20,51 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Navbar() {
-  const { data: session } = useSession();
-  
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      setLoading(false);
+    };
+
+    getUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    // Cleanup listener on component unmount
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    // Optionally redirect user after sign out
+    // window.location.pathname = '/';
+  };
+
+  // Display loading state or simplified view until user state is determined
+  if (loading) {
+     return (
+        <nav className="border-b">
+         <div className="container mx-auto flex justify-between items-center py-4">
+           <Link href="/" className="text-2xl font-bold">
+             Last Man Standing
+           </Link>
+           <div className="h-10 w-24 bg-gray-200 rounded animate-pulse"></div> 
+         </div>
+        </nav>
+     )
+  }
+
   return (
     <nav className="border-b">
       <div className="container mx-auto flex justify-between items-center py-4">
@@ -27,27 +73,28 @@ export default function Navbar() {
         </Link>
         
         <NavigationMenu>
-          <NavigationMenuList>
+          <NavigationMenuList className="gap-2">
             <NavigationMenuItem>
               <Link href="/" legacyBehavior passHref>
-                <NavigationMenuLink className="px-4 py-2">
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Home
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
               <Link href="/competitions" legacyBehavior passHref>
-                <NavigationMenuLink className="px-4 py-2">
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Competitions
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
             
-            {session ? (
+            {user ? (
+              // Logged-in user view
               <>
                 <NavigationMenuItem>
                   <Link href="/dashboard" legacyBehavior passHref>
-                    <NavigationMenuLink className="px-4 py-2">
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                       Dashboard
                     </NavigationMenuLink>
                   </Link>
@@ -57,17 +104,17 @@ export default function Navbar() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="flex items-center gap-2">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={session.user?.image || ''} alt={session.user?.name || 'User'} />
-                          <AvatarFallback>{session.user?.name?.charAt(0) || 'U'}</AvatarFallback>
+                          <AvatarImage src={user.user_metadata?.avatar_url || ''} alt={user.user_metadata?.full_name || user.email || 'User'} />
+                          <AvatarFallback>{user.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                         </Avatar>
-                        <span>{session.user?.name || 'Account'}</span>
+                        <span>{user.user_metadata?.full_name || user.email || 'Account'}</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
                         <Link href="/profile">Profile</Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => signOut()}>
+                      <DropdownMenuItem onClick={handleSignOut}>
                         Sign Out
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -75,11 +122,21 @@ export default function Navbar() {
                 </NavigationMenuItem>
               </>
             ) : (
-              <NavigationMenuItem>
-                <Button onClick={() => signIn()}>
-                  Sign In
-                </Button>
-              </NavigationMenuItem>
+              // Logged-out user view
+              <> 
+                <NavigationMenuItem>
+                  <Link href="/login" legacyBehavior passHref>
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                       Login
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                   <Link href="/signup" legacyBehavior passHref>
+                     <Button variant="default">Sign Up</Button> 
+                   </Link>
+                </NavigationMenuItem>
+              </> 
             )}
           </NavigationMenuList>
         </NavigationMenu>
