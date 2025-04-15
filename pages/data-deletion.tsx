@@ -11,7 +11,7 @@ const DataDeletion: React.FC = () => {
         <li>Include your name, email address, and any relevant account information.</li>
         <li>We will respond to your request and confirm the deletion within 30 days.</li>
       </ol>
-      <p>For any questions, please contact our support team at <strong>support@lastmanstanding.co.uk</strong>.</p>
+      <p>For any questions, please contact our support team at <strong>support@lastmanstanding.com </strong>.</p>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Competition } from '../types/competition';
 
-// this is a hook that fetches the competitions from the database
+// this is a hook that fetches the competitions /api/competitions
 export function useCompetitions() {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [loading, setLoading] = useState(true);

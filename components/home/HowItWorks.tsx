@@ -32,7 +32,7 @@ export default function HowItWorks() {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {steps.map((step) => (
-            <Card key={step.number} className="text-center">
+            <Card key={step.number} className="text-center border-none">
               <CardHeader>
                 <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto">
                   {step.number}
@@ -47,7 +47,7 @@ export default function HowItWorks() {
         </div>
         
         <div className="mt-12 text-center">
-          <Card className="max-w-md mx-auto">
+          <Card className="max-w-md mx-auto border-none bg-[#111111] shadow-md">
             <CardHeader>
               <CardTitle>Private Competitions</CardTitle>
               <CardDescription>

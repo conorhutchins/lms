@@ -1,19 +1,33 @@
 // components/home/SignUpSection.tsx
-import { createClient } from '@/lib/supabase/client'; // Import client-side creator
+import { handleOAuthSignIn, type AuthProvider } from '@/lib/supabase/auth';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from 'next/image';
+import { useState } from 'react';
+import { useToast } from "@/hooks/use-toast";
 
 export default function SignUpSection() {
-  const supabase = createClient();
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleSignUp = async (provider: 'google' | 'facebook') => {
-    await supabase.auth.signInWithOAuth({ 
-        provider: provider,
-        options: {
-            redirectTo: `${window.location.origin}/api/auth/callback` // Corrected path
-        }
-    }); 
+  const handleSignUp = async (provider: AuthProvider) => {
+    try {
+      setIsLoading(true);
+      const { success, error, url } = await handleOAuthSignIn(provider);
+      
+      if (!success || !url) {
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: error || "Failed to initiate sign in"
+        });
+        return;
+      }
+
+      window.location.href = url;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -30,7 +44,7 @@ export default function SignUpSection() {
             />
           </div>
           <div className="md:w-1/2 md:pl-12">
-            <Card>
+            <Card className="border-0 shadow-l bg-transparent">
               <CardHeader>
                 <CardTitle className="text-3xl font-sora">Ready to Compete?</CardTitle>
                 <CardDescription className="text-lg text-white">
@@ -42,14 +56,14 @@ export default function SignUpSection() {
                   Make your predictions each week and advance through the rounds. 
                   Join a community of contenders and prove your skills!
                 </p>
-                <div className="flex gap-4"> {/* Container for buttons */} 
-                  <Button onClick={() => handleSignUp('google')} size="lg" className="bg-[#A855F7] hover:bg-[#9333EA] text-white px-8 py-4 flex-1">
-                    Sign Up with Google
-                  </Button>
-                  <Button onClick={() => handleSignUp('facebook')} size="lg" variant="secondary" className="px-8 py-4 flex-1">
-                    Sign Up with Facebook
-                  </Button>
-                </div>
+                <Button 
+                  onClick={() => handleSignUp('google')} 
+                  disabled={isLoading}
+                  size="lg" 
+                  className="bg-[#A855F7] hover:bg-[#9333EA] text-white px-8 py-4 w-full"
+                >
+                  {isLoading ? 'Connecting...' : 'Sign Up with Google'}
+                </Button>
               </CardContent>
             </Card>
           </div>

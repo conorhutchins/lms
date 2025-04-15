@@ -27,7 +27,7 @@ export default function Hero() {
           </div>
           <div className="md:w-1/2">
             <Image 
-              src="/images/hero-image.png" 
+              src="/images/lastManStandingLogo.jpeg" 
               alt="Last Man Standing Logo" 
               width={800}
               height={600}

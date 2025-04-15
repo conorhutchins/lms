@@ -1,6 +1,12 @@
-import { supabase } from '../../db';
-// Import generated types
+// This file is a service file for interacting with the competitions data in Supabase
+
+// 1. findCompetitionById
+// 2. findActiveCompetitions
+// 3. createCompetition
+
 import { Database } from '../../types/supabase';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { ServiceError, type ServiceResponse } from '../../types/service';
 
 // Define helper types based on generated ones
 type Competition = Database['public']['Tables']['competitions']['Row'];
@@ -12,57 +18,144 @@ type CompetitionWithRounds = Competition & {
   rounds: Round[];
 };
 
+// Extend base ServiceError for competition-specific errors
+export class CompetitionError extends ServiceError {
+  constructor(
+    message: string,
+    code: 'NOT_FOUND' | 'DATABASE_ERROR' | 'VALIDATION_ERROR',
+    originalError?: unknown
+  ) {
+    super(message, code, originalError);
+    this.name = 'CompetitionError';
+  }
+}
+
 // Object that contains all the methods for the competition service
 export const competitionServices = {
-  // Use id to find the competition
-  async findCompetitionById(id: string): Promise<CompetitionWithRounds | null> { // Use string for UUID
-    const { data, error } = await supabase
-      .from('competitions')
-      .select('*, rounds(*)') // Select related rounds
-      .eq('id', id)
-      .single();
+  // Find a competition by its id, it'll also return its rounds, null if not found
+  async findCompetitionById(
+    supabase: SupabaseClient<Database>, 
+    id: string
+  ): Promise<ServiceResponse<CompetitionWithRounds, CompetitionError>> {
+    try {
+      const { data, error } = await supabase
+        .from('competitions') // from the competitions table
+        .select('*, rounds(*)') // select the competition and its rounds
+        .eq('id', id) // where the id matches the id passed in
+        .single(); // return a single row
 
-    if (error) {
-      console.error('Error fetching competition by id:', error);
-      return null;
+      if (error) {
+        throw new CompetitionError(
+          'Failed to fetch competition',
+          'DATABASE_ERROR',
+          error
+        );
+      }
+
+      if (!data) {
+        throw new CompetitionError(
+          `Competition with ID ${id} not found`,
+          'NOT_FOUND'
+        );
+      }
+
+      return {
+        data: { ...data, rounds: data.rounds || [] },
+        error: null
+      };
+    } catch (err) {
+      if (err instanceof CompetitionError) {
+        return { data: null, error: err };
+      }
+      // Handle unexpected errors
+      return {
+        data: null,
+        error: new CompetitionError(
+          'An unexpected error occurred',
+          'DATABASE_ERROR',
+          err
+        )
+      };
     }
-
-    // Ensure the structure matches CompetitionWithRounds
-    // Supabase might return rounds as null if none exist
-    return data ? { ...data, rounds: data.rounds || [] } : null;
   },
+// Finds all active competitions, including their rounds, returns empty array if not found
+  async findActiveCompetitions(
+    supabase: SupabaseClient<Database>
+  ): Promise<ServiceResponse<CompetitionWithRounds[], CompetitionError>> {
+    try {
+      const { data, error } = await supabase
+        .from('competitions') // from the competitions table  
+        .select('*, rounds(*)') // select the competition and its rounds
+        .eq('status', 'active'); // where the status is active
 
-  async findActiveCompetitions(): Promise<CompetitionWithRounds[]> {
-    // Find all competitions that are active
-    const { data, error } = await supabase
-      .from('competitions')
-      .select('*, rounds(*)') // Select related rounds
-      .eq('status', 'active');
+      if (error) {
+        throw new CompetitionError(
+          'Failed to fetch active competitions',
+          'DATABASE_ERROR',
+          error
+        );
+      }
 
-    if (error) {
-      console.error('Error fetching active competitions:', error);
-      return [];
+      return {
+        data: data?.map(comp => ({ ...comp, rounds: comp.rounds || [] })) || [],
+        error: null
+      };
+    } catch (err) {
+      if (err instanceof CompetitionError) {
+        return { data: null, error: err };
+      }
+      return {
+        data: null,
+        error: new CompetitionError(
+          'An unexpected error occurred while fetching competitions',
+          'DATABASE_ERROR',
+          err
+        )
+      };
     }
-
-    // Ensure each competition has a rounds array
-    return data?.map(comp => ({ ...comp, rounds: comp.rounds || [] })) || [];
   },
+// Creates a new competition, will validate the data and return the created competition or an error
+  async createCompetition( // takes in the supabase client and the competition data
+    supabase: SupabaseClient<Database>, 
+    competitionData: CompetitionCreateData
+  ): Promise<ServiceResponse<Competition, CompetitionError>> {
+    try {
+      // Start by validating the data with a check for the title
+      if (!competitionData.title) {
+        throw new CompetitionError(
+          'Competition title is required',
+          'VALIDATION_ERROR'
+        );
+      }
 
-  // Insert a new competition into the database
-  async createCompetition(competitionData: CompetitionCreateData): Promise<Competition | null> {
-    const { data, error } = await supabase
-      .from('competitions')
-      .insert([competitionData])
-      .select()
-      .single();
+      // Insert the competition data into the competitions table
+      const { data, error } = await supabase
+        .from('competitions') // from the competitions table
+        .insert([competitionData])
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error creating competition:', error);
-      return null;
+      if (error) {
+        throw new CompetitionError(
+          'Failed to create competition',
+          'DATABASE_ERROR',
+          error
+        );
+      }
+
+      return { data, error: null };
+    } catch (err) {
+      if (err instanceof CompetitionError) {
+        return { data: null, error: err };
+      }
+      return {
+        data: null,
+        error: new CompetitionError(
+          'An unexpected error occurred while creating competition',
+          'DATABASE_ERROR',
+          err
+        )
+      };
     }
-
-    return data;
-  },
-
-  // Additional methods can be added here
+  }
 };

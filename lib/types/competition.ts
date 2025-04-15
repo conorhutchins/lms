@@ -1,4 +1,3 @@
-
 export type Round = {
   id: number;
   competitionId: number;
@@ -7,14 +6,13 @@ export type Round = {
 };
 
 export type Competition = {
-  id: number;
+  id: string;
   title: string;
   entry_fee: number;
-  start_date: Date;
+  start_date: string;
   status: string;
   prize_pot: number;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
   rolled_over: boolean;
   rounds?: Round[];
 }; 

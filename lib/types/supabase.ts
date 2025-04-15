@@ -49,7 +49,7 @@ export type Database = {
           away_team_id: number | null
           created_at: string | null
           external_id: number
-          gameweek: number | null
+          gameweek_id: string | null
           home_score: number | null
           home_team: string | null
           home_team_id: number | null
@@ -67,7 +67,7 @@ export type Database = {
           away_team_id?: number | null
           created_at?: string | null
           external_id: number
-          gameweek?: number | null
+          gameweek_id?: string | null
           home_score?: number | null
           home_team?: string | null
           home_team_id?: number | null
@@ -85,7 +85,7 @@ export type Database = {
           away_team_id?: number | null
           created_at?: string | null
           external_id?: number
-          gameweek?: number | null
+          gameweek_id?: string | null
           home_score?: number | null
           home_team?: string | null
           home_team_id?: number | null
@@ -96,6 +96,62 @@ export type Database = {
           round?: string | null
           season?: number
           status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_fixtures_gameweek"
+            columns: ["gameweek_id"]
+            isOneToOne: false
+            referencedRelation: "gameweeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gameweeks: {
+        Row: {
+          created_at: string
+          data_updated_at: string
+          deadline_time: string
+          finished: boolean
+          gameweek_number: number
+          id: string
+          is_current: boolean
+          is_next: boolean
+          is_previous: boolean
+          league_id: number
+          name: string
+          season: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_updated_at?: string
+          deadline_time: string
+          finished?: boolean
+          gameweek_number: number
+          id?: string
+          is_current?: boolean
+          is_next?: boolean
+          is_previous?: boolean
+          league_id: number
+          name: string
+          season: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_updated_at?: string
+          deadline_time?: string
+          finished?: boolean
+          gameweek_number?: number
+          id?: string
+          is_current?: boolean
+          is_next?: boolean
+          is_previous?: boolean
+          league_id?: number
+          name?: string
+          season?: number
+          updated_at?: string
         }
         Relationships: []
       }

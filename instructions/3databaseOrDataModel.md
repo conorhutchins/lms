@@ -132,20 +132,90 @@ create table fixtures (
 
 ## Type Safety
 
-The application uses TypeScript with strongly typed Supabase client:
+The application uses TypeScript with strongly typed Supabase clients created using helpers for different environments.
+
+### Client-Side (Components)
+
+Client components leverage the `SupabaseAuthProvider` and `useSupabase` hook, which internally uses a helper function to create a type-safe client.
 
 ```typescript
-// in lib/db.ts
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from './types/supabase';
+// src/lib/supabase/client.ts (Helper)
+import { createBrowserClient } from '@supabase/ssr'
+import type { Database } from '../../../lib/types/supabase';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
+export function createClient<Db = Database>() {
+  return createBrowserClient<Db>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+// components/auth/SupabaseAuthProvider.tsx (Usage)
+import { createClient } from '../../src/lib/supabase/client';
+import type { Database } from '../../lib/types/supabase';
+// ...
+const [supabaseClient] = useState(() => createClient<Database>());
+// ...
 ```
 
-This ensures type-safe database access with proper TypeScript IntelliSense support.
+### Server-Side (API Routes - Pages Router)
+
+API routes create a request-specific, type-safe server client using `@supabase/ssr` and custom cookie helpers.
+
+```typescript
+// lib/utils/supabaseServerHelpers/index.ts (Example Cookie Helper)
+import { serialize, parse } from 'cookie';
+import type { NextApiRequest, NextApiResponse } from 'next';
+
+export const createApiRouteCookieMethods = (req: NextApiRequest, res: NextApiResponse) => ({
+  get(name: string) {
+    return req.cookies[name];
+  },
+  set(name: string, value: string, options: any) {
+    res.setHeader('Set-Cookie', serialize(name, value, options));
+  },
+  remove(name: string, options: any) {
+    res.setHeader('Set-Cookie', serialize(name, '', { ...options, maxAge: -1 }));
+  },
+});
+
+// pages/api/some-route.ts (Usage)
+import { createServerClient } from '@supabase/ssr';
+import { createApiRouteCookieMethods } from '../../lib/utils/supabaseServerHelpers';
+import type { Database } from '../../lib/types/supabase';
+// ...
+const supabase = createServerClient<Database>(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  { cookies: createApiRouteCookieMethods(req, res) }
+);
+// ... use supabase client ...
+```
+
+### Server-Side (Middleware)
+
+Middleware uses `createServerClient` with cookie methods derived directly from `NextRequest` and `NextResponse`.
+
+```typescript
+// middleware.ts
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
+// ...
+const supabase = createServerClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    cookies: {
+      get(name: string) { return request.cookies.get(name)?.value },
+      set(name: string, value: string, options: CookieOptions) { /* ... update request/response cookies ... */ },
+      remove(name: string, options: CookieOptions) { /* ... update request/response cookies ... */ },
+    },
+  }
+);
+// ... use supabase client (e.g., getSession) ...
+```
+
+This ensures type-safe database access with proper TypeScript IntelliSense support across different parts of the application.
 
 ## Notes
 
