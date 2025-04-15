@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Competition } from '../types/competition';
+import { Competition } from '../../../types/competition';
 
 // this is a hook that fetches the competitions /api/competitions
 export function useCompetitions() {

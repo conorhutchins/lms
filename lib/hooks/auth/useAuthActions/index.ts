@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSupabase } from '../context/SupabaseContext';
+import { useSupabase } from '../../../context/SupabaseContext';
 import type { Provider } from '@supabase/supabase-js';
 
 export function useAuthActions() {

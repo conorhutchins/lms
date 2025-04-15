@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSupabase } from '../context/SupabaseContext'; // Import the hook correctly
+import { useSupabase } from '../../../context/SupabaseContext'; 
 
 // Define user profile interface (can be moved to a shared types file later)
 export interface UserProfile {
