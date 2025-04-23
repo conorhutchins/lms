@@ -27,12 +27,9 @@ export async function middleware(request: NextRequest) {
         cookies: {
           get(name: string) {
             const cookie = request.cookies.get(name)?.value
-            console.log(`Middleware: Getting cookie ${name}`, cookie ? 'found' : 'not found')
             return cookie
           },
           set(name: string, value: string, options: CookieOptions) {
-            // If the cookie is updated, update the cookies for the request and response
-            console.log(`Middleware: Setting cookie ${name}`)
             request.cookies.set({
               name,
               value,
@@ -50,8 +47,6 @@ export async function middleware(request: NextRequest) {
             })
           },
           remove(name: string, options: CookieOptions) {
-            // If the cookie is removed, update the cookies for the request and response
-            console.log(`Middleware: Removing cookie ${name}`)
             request.cookies.set({
               name,
               value: '',
