@@ -1,12 +1,11 @@
 // All that is happening in this file is that are handling OAuth authentication callbacks from Supabase
 // When users sign in, they're redirected to this endpoint with a success code or an error code
-// This file will need tweaking for the production environment: TODO - Rate limiting, sentry, adapt env variables, use headers to determine origin, etc.
 
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createServerClient, type CookieOptions, serialize } from '@supabase/ssr' // creates supabase client for server side
 import { AuthError } from '@supabase/supabase-js' // handles supabase specific auth errors
 import { Database } from '../../../lib/types/supabase' // pulls in supabase database types
-import { AuthServiceError } from '../../../lib/types/service' // pulls in typed auth service errors
+import { ServiceError, AuthServiceError } from '../../../lib/types/service' // pulls in typed auth service errors
 
 // Production: Consider adding a rate limiter middleware (install `express-rate-limit`)
 // import rateLimit from 'express-rate-limit';
@@ -19,7 +18,7 @@ import { AuthServiceError } from '../../../lib/types/service' // pulls in typed 
 // });
 
 // Straight up redirects users to login page and gives them an error message
-function handleAuthError(res: NextApiResponse, origin: string, error: AuthServiceError) {
+function handleAuthError(res: NextApiResponse, origin: string, error: ServiceError) {
   console.error(`Auth Error [${error.code}]:`, {
     message: error.message,
     originalError: error.originalError
@@ -118,7 +117,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // Method validation, anything other than GET is not allowed
     if (req.method !== 'GET') {
-      throw new AuthServiceError(
+      throw new ServiceError(
         `Method ${req.method} Not Allowed`,
         'METHOD_NOT_ALLOWED'
       );
@@ -138,7 +137,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ? error_description[0] 
         : error_description;
       
-      throw new AuthServiceError(
+      throw new ServiceError(
         descriptionString || 'Authentication failed. Please try again.',
         'OAUTH_ERROR',
         error // Preserve original error

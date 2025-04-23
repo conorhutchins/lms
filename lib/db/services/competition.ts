@@ -13,8 +13,8 @@ type Competition = Database['public']['Tables']['competitions']['Row'];
 type Round = Database['public']['Tables']['rounds']['Row'];
 type CompetitionCreateData = Database['public']['Tables']['competitions']['Insert'];
 
-// Extend Competition type to potentially include related rounds
-type CompetitionWithRounds = Competition & {
+// Export this type so it can be used elsewhere
+export type CompetitionWithRounds = Competition & {
   rounds: Round[];
 };
 

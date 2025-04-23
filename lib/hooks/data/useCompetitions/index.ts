@@ -9,13 +9,21 @@ export function useCompetitions() {
 
   useEffect(() => {
     async function fetchCompetitions() {
+      setLoading(true); // Set loading true at the start of fetch
+      setError(null); // Reset error
       try {
+        // Fetch from the base API endpoint
         const response = await fetch('/api/competitions');
-        if (!response.ok) throw new Error('Failed to fetch competitions');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData?.error || `HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
-        setCompetitions(data);
+        setCompetitions(data || []);
       } catch (err) {
+        console.error('Error fetching competitions:', err); // Log the error
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        setCompetitions([]); // Clear data on error
       } finally {
         setLoading(false);
       }

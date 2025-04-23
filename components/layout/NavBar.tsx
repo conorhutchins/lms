@@ -88,14 +88,21 @@ export default function Navbar() {
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
+            <NavigationMenuItem>
+              <Link href="/faq" legacyBehavior passHref>
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  FAQ
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
             
             {user ? (
               // Logged-in user view
               <>
                 <NavigationMenuItem>
-                  <Link href="/dashboard" legacyBehavior passHref>
+                  <Link href="/hub" legacyBehavior passHref>
                     <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Dashboard
+                      Hub
                     </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>

@@ -14,5 +14,6 @@ export type Competition = {
   prize_pot: number;
   created_at: string;
   rolled_over: boolean;
+  sport: string;
   rounds?: Round[];
 }; 

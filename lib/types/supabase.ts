@@ -16,6 +16,7 @@ export type Database = {
           id: string
           prize_pot: number
           rolled_over: boolean
+          sport: string
           start_date: string
           status: string
           title: string
@@ -26,6 +27,7 @@ export type Database = {
           id?: string
           prize_pot?: number
           rolled_over?: boolean
+          sport: string
           start_date: string
           status?: string
           title: string
@@ -36,6 +38,7 @@ export type Database = {
           id?: string
           prize_pot?: number
           rolled_over?: boolean
+          sport?: string
           start_date?: string
           status?: string
           title?: string

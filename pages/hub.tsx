@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
+import Link from 'next/link'
 import { useSupabase } from '../lib/context/SupabaseContext'
 import { Button } from "../src/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../src/components/ui/card"
 import Image from 'next/image'
+import { Competition } from '../lib/types/competition'
 import { useCompetitions } from '../lib/hooks/data/useCompetitions'
 import { useUserProfile } from '../lib/hooks/data/useUserProfile'
 
@@ -105,10 +107,24 @@ export default function HubPage() {
             </div>
             
             <div className="bg-[#1e1e1e] p-4 rounded-lg">
+              <h3 className="text-white font-medium mb-2">Check out our public competitions</h3>
+              <div className="mt-3">
+                <Link href="/competitions/sport/football" passHref>
+                  <Button 
+                    variant="secondary"
+                    className="h-10 bg-purple-600 hover:bg-purple-700 border-0 text-white"
+                  >
+                    Football
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            <div className="bg-[#1e1e1e] p-4 rounded-lg">
               <h3 className="text-white font-medium mb-2">Active Competitions</h3>
               {competitions && competitions.length > 0 ? (
                 <ul className="space-y-2">
-                  {competitions.map(comp => (
+                  {competitions.map((comp: Competition) => (
                     <li key={comp.id} className="text-gray-300">
                       {comp.title} - {comp.status}
                     </li>
