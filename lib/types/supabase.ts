@@ -12,6 +12,7 @@ export type Database = {
       competitions: {
         Row: {
           created_at: string
+          description: string | null
           entry_fee: number
           id: string
           prize_pot: number
@@ -23,6 +24,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string | null
           entry_fee?: number
           id?: string
           prize_pot?: number
@@ -34,6 +36,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string | null
           entry_fee?: number
           id?: string
           prize_pot?: number
@@ -280,6 +283,7 @@ export type Database = {
           competition_id: string
           created_at: string
           deadline_date: string
+          gameweek_id: string | null
           id: string
           round_number: number
         }
@@ -287,6 +291,7 @@ export type Database = {
           competition_id: string
           created_at?: string
           deadline_date: string
+          gameweek_id?: string | null
           id?: string
           round_number: number
         }
@@ -294,6 +299,7 @@ export type Database = {
           competition_id?: string
           created_at?: string
           deadline_date?: string
+          gameweek_id?: string | null
           id?: string
           round_number?: number
         }
@@ -303,6 +309,13 @@ export type Database = {
             columns: ["competition_id"]
             isOneToOne: false
             referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rounds_gameweek_id_fkey"
+            columns: ["gameweek_id"]
+            isOneToOne: false
+            referencedRelation: "gameweeks"
             referencedColumns: ["id"]
           },
         ]

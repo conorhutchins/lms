@@ -1,78 +1,78 @@
+// quick file to handle the payment entry process for competitions it creates payment records in the payments table 
+
 import { Database } from '../../types/supabase';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ServiceError, type ServiceResponse } from '../../types/service';
+import { ServiceError, type ServiceResponse, type ServiceErrorCode } from '../../types/service';
 
 // Define helper types based on the payments table
 type Payment = Database['public']['Tables']['payments']['Row'];
 type PaymentInsert = Database['public']['Tables']['payments']['Insert'];
+export type PaymentEntryErrorCode = ServiceErrorCode | 'ALREADY_PAID_OR_ENTERED'; // create type for the possible payment error codes by extending the base
 
-// Extend base ServiceError for payment entry-specific errors
+// custom error class for payment entry errors using above type
 export class PaymentEntryError extends ServiceError {
   constructor(
     message: string,
-    // Refined error codes based on payment context
-    code: 'ALREADY_PAID_OR_ENTERED' | 'NOT_FOUND' | 'DATABASE_ERROR' | 'VALIDATION_ERROR' | 'UNAUTHORIZED',
+    code: PaymentEntryErrorCode,
     originalError?: unknown
   ) {
-    super(message, code, originalError);
+    super(message, code as ServiceErrorCode, originalError);
     this.name = 'PaymentEntryError';
   }
 }
 
-// Service object for handling competition entry via payments table
+// Main service object for handling payment entry process
 export const paymentEntryServices = {
-
-  /**
-   * Records a user's free entry into a competition by creating a payment record.
-   * Assumes free entry for now, sets amount=0, status='completed', type='free_entry'.
-   * @param supabase Supabase client instance.
-   * @param userId The UUID of the user entering.
-   * @param competitionId The UUID of the competition being entered.
-   * @returns ServiceResponse containing the created payment record or an error.
-   */
+// enter competition via payment
   async enterCompetitionViaPayment(
     supabase: SupabaseClient<Database>,
     userId: string,
-    competitionId: string
+    competitionId: string,
+    entryFee: number,
+    paymentType: 'free_entry' | 'paid_entry'
   ): Promise<ServiceResponse<Payment, PaymentEntryError>> {
     try {
-      // 1. Validation
+      // quick validation
       if (!userId) {
         throw new PaymentEntryError('User ID is required.', 'VALIDATION_ERROR');
       }
       if (!competitionId) {
         throw new PaymentEntryError('Competition ID is required.', 'VALIDATION_ERROR');
       }
+      // immediately check if the entry is free
+      const isFreeEntry = paymentType === 'free_entry';
 
-      // 2. Perform Insert (Check if already entered first? Optional, depends on desired UX/constraints)
-      // For now, we rely on potential DB constraints or let duplicates happen if no constraint exists.
+      // create a payment record
       const paymentData: PaymentInsert = {
         user_id: userId,
         competition_id: competitionId,
-        amount: 0, // Free entry
-        payment_status: 'completed', // Assuming free entry is automatically completed
-        payment_type: 'free_entry', // Specific type for this action
-        // Other nullable fields (free_hit_round_id, free_hit_used, etc.) default to null
+        amount: isFreeEntry ? 0 : entryFee, 
+        payment_status: isFreeEntry ? 'completed' : 'pending',
+        payment_type: isFreeEntry ? 'free_entry' : 'paid_entry',
+        // Other nullable fields to come (free_hit_round_id, free_hit_used, etc.) all can default to null
       };
 
+      // insert the payment record
       const { data, error } = await supabase
         .from('payments')
         .insert(paymentData)
         .select()
         .single(); // Return the newly created payment row
 
-      // 3. Handle Errors
+      // handle errors
       if (error) {
-        // Check for unique constraint violation (if one exists on user_id, competition_id)
-        // The specific error code might vary based on constraint name/type
-        if (error.code === '23505') { // Example: PostgreSQL unique violation code
+        // Log the detailed error object from Supabase
+        console.error("Supabase insert error details:", error);
+
+        // handle duplicate entry
+        if (error.code === '23505') {  // just the postgres error code for duplicate entry
            throw new PaymentEntryError(
             'User has already paid or entered this competition.',
             'ALREADY_PAID_OR_ENTERED',
             error
           );
         }
-        // Check for foreign key violation (e.g., competition or user doesn't exist)
+        // invalid user or competition
         if (error.code === '23503') {
            throw new PaymentEntryError(
             'Competition or User not found.',
@@ -80,15 +80,15 @@ export const paymentEntryServices = {
             error
           );
         }
-        // Generic database error
+        // handle other errors
         throw new PaymentEntryError(
           'Failed to record competition entry payment.',
           'DATABASE_ERROR',
-          error
+          error // Pass the original Supabase error object
         );
       }
 
-      // 4. Return Success
+      // handle no data returned
       if (!data) {
           throw new PaymentEntryError(
               'Failed to retrieve payment data after insert.',
@@ -99,11 +99,16 @@ export const paymentEntryServices = {
       return { data, error: null };
 
     } catch (err) {
-      // Catch specific PaymentEntryError or wrap unexpected errors
+      // handle our payment entry errors
       if (err instanceof PaymentEntryError) {
+        // Log the original error if it exists within PaymentEntryError
+        if (err.originalError) {
+          console.error("Original DB error causing PaymentEntryError:", err.originalError);
+        }
         return { data: null, error: err };
       }
-      console.error("Unexpected error in enterCompetitionViaPayment:", err); 
+      // Log other unexpected errors during the try block execution
+      console.error("Unexpected error in enterCompetitionViaPayment try block:", err); 
       return {
         data: null,
         error: new PaymentEntryError(
@@ -115,20 +120,14 @@ export const paymentEntryServices = {
     }
   },
 
-  /**
-   * Checks if a specific user has an entry/payment record for a specific competition.
-   * @param supabase Supabase client instance.
-   * @param userId The UUID of the user.
-   * @param competitionId The UUID of the competition.
-   * @returns ServiceResponse containing a boolean indicating entry status or an error.
-   */
+// method to check if user has entered a competition
   async checkUserEntryViaPayment(
     supabase: SupabaseClient<Database>,
     userId: string,
     competitionId: string
   ): Promise<ServiceResponse<{ isEntered: boolean }, PaymentEntryError>> {
     try {
-      // 1. Validation
+      // quick validation
       if (!userId) {
         throw new PaymentEntryError('User ID is required.', 'VALIDATION_ERROR');
       }
@@ -136,8 +135,7 @@ export const paymentEntryServices = {
         throw new PaymentEntryError('Competition ID is required.', 'VALIDATION_ERROR');
       }
 
-      // 2. Perform Select
-      // Checks if *any* payment record exists for this user & competition
+      // grab the count of payments for the user and competition
       const { error, count } = await supabase
         .from('payments')
         .select('id', { count: 'exact', head: true }) // Efficiently check existence
@@ -145,10 +143,9 @@ export const paymentEntryServices = {
         .eq('competition_id', competitionId)
         // Optional: Add conditions like .eq('payment_status', 'completed') if needed
 
-      // 3. Handle Errors
+      // handle errors
       if (error) {
-        // Don't treat 'PGRST116' (0 rows) as an error for this check
-        if (error.code !== 'PGRST116') {
+        if (error.code !== 'PGRST116') { // ignore no rows error from postgres as that is expected 
             throw new PaymentEntryError(
             'Failed to check competition entry status via payments.',
             'DATABASE_ERROR',
@@ -157,12 +154,12 @@ export const paymentEntryServices = {
         }
       }
 
-      // 4. Return Result
+      // return the result
       const isEntered = count !== null && count > 0;
       return { data: { isEntered }, error: null };
 
     } catch (err) {
-      // Catch specific PaymentEntryError or wrap unexpected errors
+      // handle our payment entry errors
       if (err instanceof PaymentEntryError) {
         return { data: null, error: err };
       }

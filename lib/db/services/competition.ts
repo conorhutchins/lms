@@ -3,6 +3,7 @@
 // 1. findCompetitionById
 // 2. findActiveCompetitions
 // 3. createCompetition
+// 4. checkIfCompetitionEntryRequiresPayment
 
 import { Database } from '../../types/supabase';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -16,6 +17,12 @@ type CompetitionCreateData = Database['public']['Tables']['competitions']['Inser
 // Export this type so it can be used elsewhere
 export type CompetitionWithRounds = Competition & {
   rounds: Round[];
+};
+
+// Type for the data returned by checkIfEntryRequiresPayment
+export type CompetitionEntryRequirementDetails = {
+  entryFee: number;
+  paymentType: 'free_entry' | 'paid_entry';
 };
 
 // Extend base ServiceError for competition-specific errors
@@ -152,6 +159,59 @@ export const competitionServices = {
         data: null,
         error: new CompetitionError(
           'An unexpected error occurred while creating competition',
+          'DATABASE_ERROR',
+          err
+        )
+      };
+    }
+  },
+  // simple method to check if a competition entry requires payment
+  async checkIfCompetitionEntryRequiresPayment(
+    supabase: SupabaseClient<Database>,
+    competitionId: string
+  ): Promise<ServiceResponse<CompetitionEntryRequirementDetails, CompetitionError>> {
+    try {
+      const { data: competition, error: dbError } = await supabase
+        .from('competitions')
+        .select('entry_fee')
+        .eq('id', competitionId)
+        .single();
+
+      if (dbError) {
+        if (dbError.code === 'PGRST116') { // PostgREST code for "No rows found"
+          throw new CompetitionError(
+            `Competition with ID ${competitionId} not found.`,
+            'NOT_FOUND',
+            dbError
+          );
+        }
+        throw new CompetitionError(
+          'Failed to fetch competition details.',
+          'DATABASE_ERROR',
+          dbError
+        );
+      }
+
+      if (!competition) {
+        throw new CompetitionError(
+          `Competition with ID ${competitionId} not found (unexpectedly no data after successful query).`,
+          'NOT_FOUND'
+        );
+      }
+
+      const entryFee = competition.entry_fee || 0;
+      const paymentType = entryFee === 0 ? 'free_entry' : 'paid_entry';
+      
+      return { data: { entryFee, paymentType }, error: null };
+    } catch (err) {
+      if (err instanceof CompetitionError) {
+        return { data: null, error: err };
+      }
+      console.error('Unexpected error in checkIfEntryRequiresPayment:', err);
+      return {
+        data: null,
+        error: new CompetitionError(
+          'An unexpected error occurred while checking if entry requires payment.',
           'DATABASE_ERROR',
           err
         )

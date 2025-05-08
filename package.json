@@ -4,16 +4,20 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "update-gameweeks": "tsx scripts/update-gameweek-status/update-gameweek-status.ts",
+    "reset-gameweeks": "tsx scripts/reset-gameweek-status/reset-gameweek-status.ts",
+    "update-round-deadlines": "tsx scripts/update-round-deadlines.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.2.0",
+    "@mui/icons-material": "^6.4.11",
     "@mui/material": "^6.4.4",
     "@prisma/client": "^6.3.1",
     "@radix-ui/react-avatar": "^1.1.4",
@@ -33,7 +37,6 @@
     "lucide-react": "^0.477.0",
     "next": "^15.2.4",
     "next-themes": "^0.4.4",
-    "pg": "^8.13.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "stripe": "^17.7.0",
@@ -43,7 +46,6 @@
   },
   "devDependencies": {
     "@types/node": "^20.17.30",
-    "@types/pg": "^8.11.11",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.21",

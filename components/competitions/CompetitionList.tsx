@@ -1,99 +1,100 @@
 'use client'; 
 
+
+// this file is the main component shown on the /competitions/sport/football page it shows a list of competitions and gives functionality to enter them
 import React, { useState } from 'react';
 import Link from 'next/link';
-// Import hook (which returns { competitions, loading, error })
-import { useCompetitions } from '../../lib/hooks/data/useCompetitions';
-// Import type from the correct central location
+import { useCompetitions } from '../../lib/hooks/data/useCompetitions'; // { competitions, loading, error }
 import { Competition } from '../../lib/types/competition';
-import { useSupabase } from '../../lib/context/SupabaseContext'; // Import useSupabase
-import { useRouter } from 'next/navigation'; // Import useRouter for potential redirects
+import { useSupabase } from '../../lib/context/SupabaseContext';
+import { useRouter } from 'next/navigation'; // for redirecting to login
 
-// Update props interface to make sport optional
+// Props interface for the CompetitionList component
 interface CompetitionListProps {
-  sport?: string;
+  sport?: string; // optional sport parameter used for filtering
 }
 
-// Restore function component definition with typed props
+// function component with using the typed props above
 export function CompetitionList({ sport }: CompetitionListProps) {
+  const router = useRouter();
   const { competitions, loading, error } = useCompetitions();
-  const { session } = useSupabase(); // Get session from context
-  const router = useRouter(); // Get router instance
-  const [enteringCompetitionId, setEnteringCompetitionId] = useState<string | null>(null); // State to track loading
-  const [entryError, setEntryError] = useState<string | null>(null); // State for entry errors
-
-  // --- Add console log here ---
-  console.log('[CompetitionList] Data from useCompetitions:', { 
-    loading, 
-    error, 
-    competitions,
-    sportProp: sport // Log the sport prop to help with debugging
-  });
-  // --- End console log ---
-
+  const { session } = useSupabase();
+  const [enteringCompetitionId, setEnteringCompetitionId] = useState<string | null>(null); // Track loading
+  const [entryError, setEntryError] = useState<string | null>(null); // State to store entry errors
+  const [enteredCompetitionIds, setEnteredCompetitionIds] = useState<Set<string>>(new Set()); // Track competitions entered during this session
+  
   if (loading) {
-    return <div>Loading competitions...</div>; 
+    return <div>Hold on, just loading competitions...</div>; 
   }
 
   if (error) {
     return (
       <div>
-        <p>Error loading competitions: {error}</p>
-        {/* Cannot use refetch as the simple hook doesn't provide it */}
-        {/* <button onClick={() => refetch()}>Try Again</button> */}
+        <p>There has been an error loading competitions: {error}</p>
         <p>Please try refreshing the page.</p>
       </div>
     );
   }
 
-  // --- Filter competitions client-side --- 
+  // Client side filter of competitions based on the sport prop
   const filteredCompetitions = competitions 
     ? (sport 
         ? competitions.filter(comp => comp.sport && comp.sport.toLowerCase() === sport.toLowerCase())
         : competitions) // If no sport is provided, show all competitions
     : [];
 
-  // Log the result of filtering
-  console.log('[CompetitionList] Filtered competitions:', filteredCompetitions);
-
+  // When no competitions are found, show a message
   if (filteredCompetitions.length === 0) {
-    return <p>No {sport ? `active ${sport}` : 'active'} competitions found.</p>;
+    return <p>No {sport ? `active ${sport}` : 'active'} competitions found</p>;
   }
 
-  // Function to handle entering a competition
+  // Function to handle competition entry
   const handleEnterCompetition = async (competitionId: string) => {
-    setEntryError(null); // Clear previous errors
+    setEntryError(null);
+    // authentication check
     if (!session) {
-      // Option 1: Redirect to login
-      // router.push('/auth/signin'); 
-      // Option 2: Show message
-      setEntryError('You must be logged in to enter a competition.');
-      alert('Please log in to enter.'); // Simple alert for now
+      router.push('/login');
       return;
     }
 
-    setEnteringCompetitionId(competitionId); // Set loading state for this button
+    setEnteringCompetitionId(competitionId); // Set loading state for the enter button it stores the id of the competition being entered
 
     try {
+      // api call to enter the competition
       const response = await fetch(`/api/competitions/${competitionId}/enter`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Authorization header is handled by Supabase client via cookies
         },
       });
 
       const result = await response.json();
 
+      // handle error
       if (!response.ok) {
-        console.error('Failed to enter competition:', result.error);
+        console.error('Sadly we failed to enter you into the competition:', result.error);
         setEntryError(result.error || `Error: ${response.status}`);
-        alert(`Failed to enter competition: ${result.error || 'Please try again.'}`); 
+        // handle already entered
+        if (response.status === 409) {
+          alert('Looks like you are already in this competition');
+          // Add to local state so button updates even if API fails
+          setEnteredCompetitionIds(prev => new Set(prev).add(competitionId));
+        } else {
+          alert(`We failed to enter you into the competition: ${result.error || 'Please try again.'}`); 
+        }
       } else {
-        console.log('Successfully entered competition:', result);
-        alert('Successfully entered competition!');
-        // Optional: Refresh competition data or update UI state to reflect entry
-        // e.g., you might want to disable the button or change its text
+        // Check if payment is required (for paid competitions)
+        if (result.payment_required) {
+          alert('This competition requires payment. Redirecting to checkout...');
+          router.push(result.checkout_url);
+          return;
+        }
+        
+        // Free entry was successful
+        alert('Nice one challenger, you are entered into the competition!');
+        // Add to local state to update the button
+        setEnteredCompetitionIds(prev => new Set(prev).add(competitionId));
+        router.push(`/competitions/${competitionId}/picks`); // redirect to the picks page if successful entry
       }
     } catch (err) {
       console.error('Error during fetch:', err);
@@ -119,24 +120,38 @@ export function CompetitionList({ sport }: CompetitionListProps) {
       <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredCompetitions.map((comp: Competition) => { // Map over filtered list
           const isEntering = enteringCompetitionId === comp.id; // Check if this competition is being entered
+          // Check if successfully entered during this component's lifetime or if API indicated already entered
+          const hasEnteredLocally = enteredCompetitionIds.has(comp.id);
           return (
             <li key={comp.id} className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
               <Link href={`/competitions/${comp.id}`} className="block">
-                <h3 className="text-xl font-medium mb-2">{comp.title}</h3>
-                <p className="text-sm text-gray-600">Status: {comp.status}</p>
-                <p className="text-sm text-gray-600">Entry Fee: £{comp.entry_fee}</p> 
-                <p className="text-sm text-gray-600">Prize Pot: £{comp.prize_pot.toLocaleString()}</p> 
-                <p className="text-sm text-gray-600">
+                <h3 className="text-xl font-medium mb-2 text-orange-500 text-center">{comp.title}</h3>
+                <p className="text-md text-white text-center">Status: {comp.status}</p>
+                <p className="text-md text-white text-center">Entry Fee: £{comp.entry_fee}</p> 
+                <p className="text-md text-white text-center">
                   Starts: {new Date(comp.start_date).toLocaleDateString()}
                 </p>
+                <p className="text-md text-white text-center">Current Prize Pot: £{comp.prize_pot.toLocaleString()}</p> 
               </Link>
               <div className="mt-4 flex justify-end">
                 <button
-                  onClick={() => handleEnterCompetition(comp.id)}
-                  className={`bg-purple-600 hover:bg-purple-700 text-white py-2 px-6 rounded-md font-medium transition-colors ${isEntering ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={isEntering || !session} // Disable if entering or not logged in
+                  onClick={() => {
+                    if (hasEnteredLocally) {
+                      router.push(`/competitions/${comp.id}`);
+                    } else {
+                      handleEnterCompetition(comp.id);
+                    }
+                  }}
+                  className={`text-white py-2 px-6 rounded-md font-medium transition-colors 
+                    ${hasEnteredLocally 
+                      ? 'bg-green-600 hover:bg-green-700' // Style for "Go to Picks"
+                      : isEntering 
+                        ? 'bg-purple-600 opacity-50 cursor-wait' // Style for "Entering..."
+                        : 'bg-purple-600 hover:bg-purple-700' // Default style for "Enter Competition"
+                    }`}
+                  disabled={isEntering || (!session && !hasEnteredLocally)} // Only disable if entering, or if not logged in AND not already entered
                 >
-                  {isEntering ? 'Entering...' : 'Enter'}
+                  {hasEnteredLocally ? 'View Competition' : isEntering ? 'Entering...' : 'Enter Competition'}
                 </button>
               </div>
             </li>

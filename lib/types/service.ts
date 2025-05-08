@@ -16,6 +16,8 @@ export type ServiceErrorCode =
   | 'NOT_FOUND'
   | 'DATABASE_ERROR'
   | 'VALIDATION_ERROR'
+  | 'PICK_LOCKED'
+  | 'ALREADY_PICKED_TEAM_THIS_COMP'
   // Auth specific errors
   | 'METHOD_NOT_ALLOWED'
   | 'INVALID_CODE'

@@ -2,10 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-/**
- * Sets up environment variables needed for database connections.
- * Must be called BEFORE importing any module that uses those environment variables.
- */
+// sets up environment variables needed for database connections and has to be called before any module that uses those environment variables
 export function setupEnvironment(): void {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
@@ -26,10 +23,6 @@ export function setupEnvironment(): void {
     // Set environment variables that will be used by the Supabase client in lib/db.js
     process.env.NEXT_PUBLIC_SUPABASE_URL = supabaseUrlMatch[1];
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = supabaseKeyMatch[1];
-    
-    // Optional: Extract other environment variables as needed
-    // const apiKeyMatch = envContent.match(/API_FOOTBALL_KEY=([^\r\n]+)/);
-    // if (apiKeyMatch) process.env.API_FOOTBALL_KEY = apiKeyMatch[1];
     
     console.log('Environment setup complete.');
   } catch (error) {

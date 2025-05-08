@@ -37,6 +37,7 @@ create table competitions (
   status text not null, -- Assuming non-null
   prize_pot numeric(10,2) not null, -- Assuming non-null
   rolled_over boolean default false,
+  description text null 
   created_at timestamp with time zone default now()
 );
 ```

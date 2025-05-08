@@ -2,6 +2,53 @@
 
 This directory contains utility scripts for managing data in the LMS application.
 
+## Team Management
+
+### Organise Teams
+
+The `organise-teams.ts` script manages Premier League team data in the Supabase database:
+
+- Adds new teams to the database
+- Updates existing teams' API IDs and league status
+- Marks relegated teams as "Former Premier League" instead of deleting them
+
+This script is useful when:
+- Setting up the app initially
+- Starting a new season with promoted/relegated teams
+- Updating team data
+
+```bash
+# Run the script to manage teams
+npx tsx scripts/organise-teams/organise-teams.ts
+```
+
+## Gameweek Management
+
+### Update Gameweek Status
+
+The `calculate-current-gameweek.ts` script automatically updates gameweek statuses based on the current date:
+
+- Sets current, next, and previous gameweeks
+- Marks finished gameweeks
+
+```bash
+# Run the script to update gameweek statuses
+npx tsx scripts/calculate-current-gameweek/calculate-current-gameweek.ts
+```
+
+### Manually Control Gameweek Status
+
+The `manually-control-gameweek-status.ts` script provides a CLI tool for testing different gameweek states:
+
+- Reset all gameweeks to default
+- Set a specific gameweek as current
+- Set up testing scenarios
+
+```bash
+# Run the script to control gameweek status
+npx tsx scripts/manually-control-gameweek\ status/manually-control-gameweek-status.ts
+```
+
 ## Fixture Data Management
 
 ### Populate Fixtures
