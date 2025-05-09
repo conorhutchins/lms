@@ -1,4 +1,3 @@
-// components/layout/Navbar.tsx
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client'; // Use our client-side creator
@@ -66,10 +65,10 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="border-b">
+    <nav className="border-b border-border/40 bg-card/50">
       <div className="container mx-auto flex justify-between items-center py-4">
-        <Link href="/" className="text-2xl font-bold">
-          Last Man Standing
+        <Link href="/" className="text-2xl font-bold text-foreground hover:text-foreground/90 transition-colors">
+          Last Man Standing.
         </Link>
         
         <NavigationMenu>

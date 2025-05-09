@@ -1,4 +1,3 @@
-// components/home/HowItWorks.tsx
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
@@ -23,11 +22,11 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section className="py-16">
+    <section className="py-16 bg-muted/50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold font-sora">Rules Of Engagement</h2>
-          <p className="mt-4 text-lg">Follow these simple steps to join the competition.</p>
+          <h2 className="text-3xl font-bold gradient-heading">Rules Of Engagement</h2>
+          <p className="mt-4 text-lg text-muted-foreground">Follow these simple steps to join the competition.</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -37,10 +36,10 @@ export default function HowItWorks() {
                 <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto">
                   {step.number}
                 </div>
-                <CardTitle className="mt-4">{step.title}</CardTitle>
+                <CardTitle className="mt-4 text-primary">{step.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>{step.description}</p>
+                <p className="text-muted-foreground">{step.description}</p>
               </CardContent>
             </Card>
           ))}
@@ -54,8 +53,8 @@ export default function HowItWorks() {
                 Want to play with just your friends?
               </CardDescription>
             </CardHeader>
-            <CardFooter className="justify-center">
-              <Button asChild variant="default">
+            <CardFooter className="justify-center py-6">
+              <Button asChild variant="secondary" className="signup-button !bg-secondary !text-secondary-foreground hover:!bg-secondary/80">
                 <Link href="/competitions/create">Create Private Competition</Link>
               </Button>
             </CardFooter>
