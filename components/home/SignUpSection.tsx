@@ -106,7 +106,7 @@ export default function SignUpSection() {
                     <button
                       type="button"
                       onClick={() => handleSignUp('google')}
-                      className="flex w-full justify-center items-center gap-2 rounded-md border border-input bg-white px-3.5 py-2.5 text-sm font-semibold text-foreground shadow-sm hover:bg-muted/50 focus-visible:outline focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 text-primary"
+                      className="flex w-full justify-center items-center gap-2 rounded-md border border-input bg-white px-3.5 py-2.5 text-sm font-semibold text-primary shadow-sm hover:bg-muted/50 focus-visible:outline focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                       <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24">
                         <path

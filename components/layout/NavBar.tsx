@@ -68,7 +68,7 @@ export default function Navbar() {
     <nav className="border-b border-border/40 bg-card/50">
       <div className="container mx-auto flex justify-between items-center py-4">
         <Link href="/" className="text-2xl font-bold text-foreground hover:text-foreground/90 transition-colors">
-          Last Man Standing.
+          Last Man Standing HQ
         </Link>
         
         <NavigationMenu>

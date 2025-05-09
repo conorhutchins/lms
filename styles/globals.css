@@ -1,23 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root {
-    --background: #000000;
-    --primary-text-color: #ffffff;
-    --navbar-height: 70px; /* Approximate height of navbar, adjust based on your design */
-}
-
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
-
-body {
-    background-color: var(--background);
-    color: var(--primary-text-color);
-  }
-
-
 
 @layer base {
   :root {
@@ -65,6 +48,10 @@ body {
     
     /* Border radius */
     --radius: 0.5rem;
+    
+    /* App specific variables */
+    --primary-text-color: #ffffff;
+    --navbar-height: 70px; /* Approximate height of navbar, adjust based on your design */
   }
 
   .dark {
@@ -99,16 +86,16 @@ body {
     --input: 217.2 32.6% 14.5%;
     --ring: 267 75% 59%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
-    }
+  }
+  
   html {
     @apply bg-[#000000];
   }
+  
   body {
     @apply bg-[#000000] text-[var(--primary-text-color)] min-h-screen; /* Force black background */
-    }
+  }
 }
