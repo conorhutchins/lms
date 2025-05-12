@@ -1,6 +1,6 @@
-import { Database } from '../../types/supabase';
+import { Database } from '../../../types/supabase';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ServiceError, type ServiceResponse } from '../../types/service';
+import { ServiceError, type ServiceResponse } from '../../../types/service';
 
 // Define helper types from database schema
 type Pick = Database['public']['Tables']['picks']['Row']; // full pick type
