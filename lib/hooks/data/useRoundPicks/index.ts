@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Pick } from '../../../types/pick';
-import { RoundWithCompetitionAndFixtures } from '../../../db/services/roundService';
+import { RoundWithCompetitionAndFixtures } from '../../../types/round';
 
 // Updated RoundWithFixturesAndPick type without explicit fixtures field
 export type RoundWithFixturesAndPick = RoundWithCompetitionAndFixtures & {

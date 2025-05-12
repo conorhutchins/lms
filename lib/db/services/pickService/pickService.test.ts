@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { pickServices } from './pickService';
 import { createMockSupabase, createSuccessResponse, createErrorResponse } from '../../../test-utils/supabase-mock';
-import { PickError } from './pickService';
+import { PickError, PickStatus } from './pickService';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '../../../types/supabase';
 
@@ -307,8 +307,15 @@ describe('pickServices', () => {
           user_id: userId,
           round_id: roundId,
           team_id: 'team1',
-          status: 'pending',
-          pick_timestamp: expect.any(String)
+          pick_timestamp: expect.any(String),
+          status: PickStatus.PENDING
+        },
+        {
+          user_id: userId,
+          round_id: roundId,
+          team_id: 'team2',
+          pick_timestamp: expect.any(String),
+          status: PickStatus.PENDING
         }
       ];
 

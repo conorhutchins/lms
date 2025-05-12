@@ -1,23 +1,19 @@
-import { Database } from '../../../types/supabase';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ServiceError, type ServiceResponse } from '../../../types/service';
+import { ServiceResponse } from '../../../types/service';
+import { logEvent } from '../../../utils/logging';
+import { Database } from '../../../types/supabase';
+import {
+  Pick,
+  PickInsert,
+  PickStatus,
+  PickError,
+  PickUpdate,
+  convertExternalTeamIds,
+  createPicksForRound
+} from '../../../types/pick';
 
-// Define helper types from database schema
-type Pick = Database['public']['Tables']['picks']['Row']; // full pick type
-type PickInsert = Database['public']['Tables']['picks']['Insert']; // type for inserting a pick
-type PickUpdate = Database['public']['Tables']['picks']['Update']; // type for updating a pick
-
-// Custom error class for pick errors
-export class PickError extends ServiceError {
-  constructor(
-    message: string,
-    code: 'NOT_FOUND' | 'DATABASE_ERROR' | 'VALIDATION_ERROR' | 'PICK_LOCKED' | 'ALREADY_PICKED_TEAM_THIS_COMP', // Added potential error codes
-    originalError?: unknown
-  ) {
-    super(message, code, originalError);
-    this.name = 'PickError';
-  }
-}
+// In-memory cache for team lookups to reduce database queries
+const teamCache = new Map<string, string>();
 
 // Service object with methods inside
 // 1. pickService.findUserPickForRound - grab users pick for a specific round
@@ -28,8 +24,9 @@ export class PickError extends ServiceError {
 // 6. pickService.getUserPicksForRounds - grab a user's picks for multiple rounds
 // 7. pickService.updatePicksToLocked - change the status of picks to locked if the round deadline has passed
 // 8. pickService.getRoundPicks - grab all picks for a specific round
-// In-memory cache for team lookups to reduce database queries
-const teamCache = new Map<string, string>();
+
+// Export PickError and PickStatus for use in tests
+export { PickError, PickStatus };
 
 export const pickServices = {
 // grab users pick for a specific round
@@ -212,7 +209,7 @@ export const pickServices = {
         user_id: userId,
         round_id: roundId,
         team_id: internalTeamId,
-        status: isDeadlinePassed ? 'locked' : 'pending', // lock pick if round deadline has passed
+        status: isDeadlinePassed ? PickStatus.LOCKED : PickStatus.PENDING, // lock pick if round deadline has passed
         pick_timestamp: new Date().toISOString()
       };
 
