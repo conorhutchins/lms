@@ -65,7 +65,7 @@ describe('pickServices', () => {
       );
 
       const result = await pickServices.findTeamUuidByExternalId(
-        mockSupabase as any, // Cast to any
+        mockSupabase as unknown as SupabaseClient<Database>,
         'external-team-1'
       );
 
@@ -80,7 +80,7 @@ describe('pickServices', () => {
       );
 
       const result = await pickServices.findTeamUuidByExternalId(
-        mockSupabase as any, // Cast to any
+        mockSupabase as unknown as SupabaseClient<Database>,
         'non-existent-team'
       );
 
@@ -597,33 +597,4 @@ describe('pickServices', () => {
     });
   });
 
-  describe('convertExternalTeamIds', () => {
-    it('should convert multiple external team IDs to internal IDs', async () => {
-      // Mock the entire convertExternalTeamIds method
-      const convertExternalTeamIdsSpy = jest.spyOn(pickServices, 'convertExternalTeamIds')
-        .mockImplementation(() => Promise.resolve(['internal-team-1', 'internal-team-2', 'internal-team-3']));
-
-      const result = await pickServices.convertExternalTeamIds(
-        mockSupabase as any,
-        ['external-1', 'external-2', 'external-3']
-      );
-
-      expect(result).toEqual(['internal-team-1', 'internal-team-2', 'internal-team-3']);
-      convertExternalTeamIdsSpy.mockRestore();
-    });
-
-    it('should handle null results for non-existent teams', async () => {
-      // Mock the entire convertExternalTeamIds method
-      const convertExternalTeamIdsSpy = jest.spyOn(pickServices, 'convertExternalTeamIds')
-        .mockImplementation(() => Promise.resolve(['internal-team-1', null, 'internal-team-3']));
-
-      const result = await pickServices.convertExternalTeamIds(
-        mockSupabase as any,
-        ['external-1', 'non-existent', 'external-3']
-      );
-
-      expect(result).toEqual(['internal-team-1', null, 'internal-team-3']);
-      convertExternalTeamIdsSpy.mockRestore();
-    });
   });
-}); 

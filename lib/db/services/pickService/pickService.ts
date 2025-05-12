@@ -28,6 +28,9 @@ export class PickError extends ServiceError {
 // 6. pickService.getUserPicksForRounds - grab a user's picks for multiple rounds
 // 7. pickService.updatePicksToLocked - change the status of picks to locked if the round deadline has passed
 // 8. pickService.getRoundPicks - grab all picks for a specific round
+// In-memory cache for team lookups to reduce database queries
+const teamCache = new Map<string, string>();
+
 export const pickServices = {
 // grab users pick for a specific round
   async findUserPickForRound(
@@ -79,46 +82,83 @@ export const pickServices = {
 // find a team's internal UUID in our database by its external API ID from Football API we're using
   async findTeamUuidByExternalId(
     supabase: SupabaseClient<Database>,
-    externalTeamId: string | number // external API team ID
+    externalTeamId: string | number, // external API team ID
+    options: { 
+      useCache?: boolean; 
+      logLevel?: 'debug' | 'info' | 'warn' | 'error' 
+    } = { useCache: true, logLevel: 'warn' }
   ): Promise<ServiceResponse<string | null, PickError>> {
+    const { 
+      useCache = true, 
+      logLevel = 'warn' 
+    } = options;
+
     try {
-      // make sure ID is a string for comparison
+      // Ensure the external team ID is a string for consistent comparison
       const externalIdString = externalTeamId.toString();
       
-      console.log(`Looking up internal team ID for external ID: ${externalIdString}`);
+      // Check in-memory cache first if caching is enabled
+      if (useCache) {
+        const cachedTeamId = teamCache.get(externalIdString);
+        if (cachedTeamId) {
+          this.logMessage(logLevel, `Cache hit for external team ID: ${externalIdString}`);
+          return { data: cachedTeamId, error: null };
+        }
+      }
       
-      // Look in the teams table for the team with the external ID
+      this.logMessage(logLevel, `Looking up internal team ID for external ID: ${externalIdString}`);
+      
+      // Query the teams table to find the team with the matching external ID
       const { data: teamData, error: teamError } = await supabase
         .from('teams')
         .select('id')
         .eq('external_api_id', externalIdString)
         .maybeSingle();
       
-      // handle errors
+      // Handle database query errors
       if (teamError) {
-        console.error("Error looking up team:", teamError);
+        this.logMessage('error', `Database error looking up team: ${teamError.message}`);
         throw new PickError('Failed to look up team.', 'DATABASE_ERROR', teamError);
       }
-      // handle case where team with external ID is not found
+
+      // Handle case where no team is found with the given external ID
       if (!teamData) {
-        console.warn(`No team found with external ID: ${externalIdString}`);
+        this.logMessage(logLevel, `No team found with external ID: ${externalIdString}`);
         return { data: null, error: null };
       }
-      // return the team's internal UUID
-      console.log(`Found internal team ID: ${teamData.id} for external ID: ${externalIdString}`);
+
+      // Cache the result if caching is enabled
+      if (useCache) {
+        teamCache.set(externalIdString, teamData.id);
+      }
+      
+      this.logMessage(logLevel, `Found internal team ID: ${teamData.id} for external ID: ${externalIdString}`);
       return { data: teamData.id, error: null };
       
     } catch (err) {
-      // handle our pick errors
+      // Handle specific Pick errors
       if (err instanceof PickError) {
         return { data: null, error: err };
       }
-      console.error("Unexpected error in findTeamUuidByExternalId:", err);
+
+      // Log and wrap unexpected errors
+      this.logMessage('error', `Unexpected error in findTeamUuidByExternalId: ${err}`);
       return {
         data: null,
-        error: new PickError('An unexpected error looking up team.', 'DATABASE_ERROR', err)
+        error: new PickError('An unexpected error occurred whilst looking up the team.', 'DATABASE_ERROR', err)
       };
     }
+  },
+
+  // Centralised logging method with UK English spelling
+  logMessage(level: 'debug' | 'info' | 'warn' | 'error', message: string): void {
+    const logLevels = {
+      debug: console.debug,
+      info: console.info,
+      warn: console.warn,
+      error: console.error
+    };
+    logLevels[level](message);
   },
 
 // saves a user's pick for a specific round (either by inserting or updating)
@@ -445,10 +485,35 @@ export const pickServices = {
     supabase: SupabaseClient<Database>,
     externalTeamIds: (string | number)[]
   ): Promise<(string | null)[]> {
-    const results = await Promise.all(
-      externalTeamIds.map(id => this.findTeamUuidByExternalId(supabase, id))
-    );
-    return results.map(result => result.data);
+    // Optimise team ID conversion by using a single database query
+    const externalIdStrings = externalTeamIds.map(id => id.toString());
+    
+    try {
+      // Fetch all matching internal team IDs in a single query
+      const { data: teamMappings, error } = await supabase
+        .from('teams')
+        .select('id, external_api_id')
+        .in('external_api_id', externalIdStrings);
+      
+      if (error) {
+        this.logMessage('error', `Error converting external team IDs: ${error.message}`);
+        throw new PickError('Failed to convert external team IDs.', 'DATABASE_ERROR', error);
+      }
+
+      // Create a mapping of external to internal IDs for efficient lookup
+      const teamIdMap = new Map(
+        teamMappings.map(team => [team.external_api_id, team.id])
+      );
+      
+      // Map external IDs to internal IDs, preserving original order
+      return externalIdStrings.map(externalId => 
+        teamIdMap.get(externalId) || null
+      );
+      
+    } catch (err) {
+      this.logMessage('error', `Unexpected error in convertExternalTeamIds: ${err}`);
+      throw err;
+    }
   },
   
   // Create pick objects for a round from a list of team IDs
