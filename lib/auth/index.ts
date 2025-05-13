@@ -2,6 +2,18 @@
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 
+// Extend the NextAuth types to include user ID
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id?: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    }
+  }
+}
+
 /**
  * All this file does is setup NextAuth with Google as the provider
  */
@@ -12,11 +24,16 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     }),
   ],
-  // Using default NextAuth pages
+  // Using custom pages for authentication flows
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/error',
+  },
   callbacks: {
     // when a session is checked it just adds the user id to the session object
     async session({ session, token }) {
-      if (token.id) {
+      if (session.user && token.id) {
+        // Safely add id to session user
         session.user.id = token.id as string;
       }
       return session;
