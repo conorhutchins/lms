@@ -2,9 +2,10 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createServerClient } from '@supabase/ssr';
-import { Database } from '../../lib/types/supabase';
-import { pickServices, PickError } from '../../lib/db/services/pickService';
-import { createApiRouteCookieMethods } from '../../lib/utils/supabaseServerHelpers/supabaseServerHelpers';
+import { Database } from 'lib/types/supabase';
+import { pickServices } from 'lib/db/services/pickService/pickService';
+import { PickError } from 'lib/types/pick';
+import { createApiRouteCookieMethods } from 'lib/utils/supabaseServerHelpers/supabaseServerHelpers';
 
 export default async function handler(
   req: NextApiRequest,
@@ -16,14 +17,13 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Create Supabase client
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: createApiRouteCookieMethods(req, res) }
-  );
-
   try {
+    // Create Supabase client
+    const supabase = createServerClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: createApiRouteCookieMethods(req, res) }
+    );
     // Get user from session
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
