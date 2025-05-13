@@ -11,7 +11,6 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  console.log('Middleware: Processing request for', request.nextUrl.pathname)
   
   let response = NextResponse.next({
     request: {
@@ -69,11 +68,9 @@ export async function middleware(request: NextRequest) {
 
     // Refresh session if expired - required for Server Components
     // https://supabase.com/docs/guides/auth/auth-helpers/nextjs#managing-session-with-middleware
-    console.log('Middleware: Refreshing session')
     const { data: { session } } = await supabase.auth.getSession()
-    console.log('Middleware: Session exists?', !!session)
   } catch (error) {
-    console.error('Middleware: Error refreshing session:', error)
+    // Silently handle errors - session refresh failures shouldn't break the app
   }
 
   return response
