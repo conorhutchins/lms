@@ -12,7 +12,7 @@ import {
   getRoundStatus,
   validateRoundInput,
   ensureFixturesArray,
-  normalizeRound
+  createSafeRoundObject
 } from '../../../types/round';
 
 // Caching configuration
@@ -85,12 +85,17 @@ export async function findRoundWithFixtures(
       .eq('id', roundId)
       .single();
 
+    // Debug: log the raw supabase response
+    console.log('RAW SUPABASE RESPONSE:', { data, error });
+
     if (error) {
+      console.log('EARLY RETURN: error', error);
       logEvent('error', 'Error fetching round', { error, roundId });
       return { data: null, error: RoundError.databaseError(error.message) };
     }
 
     if (!data) {
+      console.log('EARLY RETURN: no data');
       return { data: null, error: RoundError.notFound() };
     }
 
@@ -116,11 +121,8 @@ export const roundServices = {
   async findRoundWithFixtures(
     supabase: SupabaseClient<Database>,
     roundId: string,
-    options: { 
-      forceRefresh?: boolean, 
-      includeRelations?: boolean 
-    } = {}
-  ): Promise<ServiceResponse<RoundWithCompetitionAndFixtures, RoundError>> {
+    options: { forceRefresh?: boolean; includeRelations?: boolean } = {}
+  ): Promise<ServiceResponse<RoundWithCompetitionAndFixtures>> {
     const { forceRefresh = false, includeRelations = true } = options;
 
     try {
@@ -391,7 +393,7 @@ export const roundServices = {
       }
 
       // Normalise rounds to ensure they conform to the expected type
-      const normalisedRounds = data.map(round => normalizeRound(round));
+      const normalisedRounds = data.map(roundData => createSafeRoundObject(roundData));
 
       const result: RoundListResult = {
         rounds: normalisedRounds,
@@ -463,7 +465,7 @@ export const roundServices = {
       
       if (activeRound) {
         // Normalise the round with IN_PROGRESS status
-        const normalisedRound = normalizeRound({
+        const normalisedRound = createSafeRoundObject({
           ...activeRound,
           status: RoundStatus.IN_PROGRESS
         });
@@ -488,7 +490,7 @@ export const roundServices = {
         
         const nextRound = upcomingRounds[0];
         // Normalise the round with UPCOMING status
-        const normalisedRound = normalizeRound({
+        const normalisedRound = createSafeRoundObject({
           ...nextRound,
           status: RoundStatus.UPCOMING
         });
@@ -513,7 +515,7 @@ export const roundServices = {
         
         const lastRound = completedRounds[0];
         // Normalise the round with COMPLETED status
-        const normalisedRound = normalizeRound({
+        const normalisedRound = createSafeRoundObject({
           ...lastRound,
           status: RoundStatus.COMPLETED
         });

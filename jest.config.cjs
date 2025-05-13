@@ -10,7 +10,10 @@ module.exports = {
     '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
   },
   moduleDirectories: ['node_modules', '<rootDir>'],
-  testMatch: ['**/__tests__/**/*.test.[jt]s?(x)'],
+  testMatch: [
+    '**/__tests__/**/*.test.[jt]s?(x)',
+    '**/lib/**/*.test.[jt]s?(x)'
+  ],
   collectCoverageFrom: [
     'lib/**/*.{js,jsx,ts,tsx}',
     'components/**/*.{js,jsx,ts,tsx}',

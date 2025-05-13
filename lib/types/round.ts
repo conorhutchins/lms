@@ -34,10 +34,25 @@ export function isRoundActive(round: Partial<Round>): boolean {
   return deadlineDate !== null && now <= deadlineDate;
 }
 
+// Helper to parse ISO dates with custom format (ending with 's')
+function parseISODate(isoDateString: string | null | undefined): Date | null {
+  if (!isoDateString) return null;
+  
+  // For dates with the 's' suffix format that the user prefers
+  if (isoDateString.endsWith('s')) {
+    // Simply replace 's' with 'Z' for ISO 8601 compatibility
+    const standardIso = isoDateString.replace(/s$/, 'Z');
+    return new Date(standardIso);
+  }
+  
+  // Standard Date constructor for other formats
+  return new Date(isoDateString);
+}
+
 export function getRoundStatus(round: Partial<Round>): RoundStatus {
   const now = new Date();
-  const deadlineDate = round.deadline_date ? new Date(round.deadline_date) : null;
-
+  const deadlineDate = parseISODate(round.deadline_date);
+  
   if (!deadlineDate) return RoundStatus.UPCOMING;
 
   if (now <= deadlineDate) return RoundStatus.IN_PROGRESS;
@@ -67,11 +82,11 @@ export function ensureFixturesArray(round: any): Fixture[] {
 }
 
 /**
- * Normalizes a round object to ensure it conforms to the RoundWithCompetitionAndFixtures type
+ * Creates a safe, normalized round object conforming to the RoundWithCompetitionAndFixtures type
  */
-export function normalizeRound(round: any): RoundWithCompetitionAndFixtures {
+export function createSafeRoundObject(round: any): RoundWithCompetitionAndFixtures {
   if (!round) {
-    throw new Error('Cannot normalize undefined round');
+    throw new Error('Cannot normalise undefined round');
   }
   
   return {
