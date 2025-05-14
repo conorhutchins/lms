@@ -1,6 +1,6 @@
 // All this file is handling GET requests to fetch all active competitions from the database
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { competitionServices, CompetitionError } from '../../../lib/db/services/competition'; // pull in service and specific error type
+import { competitionServices, CompetitionError } from '../../../lib/db/services/competitionService/competition'; // pull in service and specific error type
 import { createServerClient } from '@supabase/ssr'; // Use createServerClient for API routes, import parse/serialize
 import { Database } from '../../../lib/types/supabase'; // Import the correct Database type
 import { createApiRouteCookieMethods } from '../../../lib/utils/supabaseServerHelpers/supabaseServerHelpers';

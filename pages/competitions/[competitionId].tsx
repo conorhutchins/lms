@@ -3,7 +3,7 @@
 // This page is used to display details of a competition and allow users to enter
 
 import { GetServerSideProps, InferGetServerSidePropsType, NextApiRequest, NextApiResponse } from 'next'; // get infer is just a helper to take off prop types from the server side props
-import { competitionServices, CompetitionWithRounds } from '../../lib/db/services/competition';
+import { competitionServices, CompetitionWithRounds } from '../../lib/db/services/competitionService/competition'; 
 import { createServerClient } from '@supabase/ssr';
 import { Database } from '../../lib/types/supabase';
 import { createApiRouteCookieMethods } from '../../lib/utils/supabaseServerHelpers/supabaseServerHelpers';

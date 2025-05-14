@@ -5,7 +5,7 @@ import { createServerClient } from '@supabase/ssr';
 import { Database } from '../../../../lib/types/supabase';
 import { createApiRouteCookieMethods } from '../../../../lib/utils/supabaseServerHelpers/supabaseServerHelpers';
 import { paymentEntryServices, PaymentEntryError, PaymentEntryErrorCode } from '../../../../lib/db/services/paymentEntry';
-import { competitionServices, CompetitionError } from '../../../../lib/db/services/competition';
+import { competitionServices, CompetitionError } from '../../../../lib/db/services/competitionService/competition';
 
 export default async function handler(
   req: NextApiRequest,
