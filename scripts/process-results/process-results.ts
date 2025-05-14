@@ -35,7 +35,7 @@ process.env.SUPABASE_SERVICE_ROLE_KEY = supabaseKeyMatch[1];
 
 // Import required modules
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from '../lib/types/supabase';
+import type { Database } from '../../lib/types/supabase';
 
 // Create Supabase admin client with service role key
 const supabase = createClient<Database>(
@@ -274,8 +274,8 @@ async function processResults() {
         continue; // Skip this fixture
       }
 
-      if (fixture.gameweek === null) {
-        console.warn(`Fixture ${fixture.external_id} has null gameweek. Cannot link to round. Skipping.`);
+      if (fixture.gameweek_id === null) {
+        console.warn(`Fixture ${fixture.external_id} has null gameweek_id. Cannot link to round. Skipping.`);
         continue; // Skip this fixture
       }
 
@@ -284,17 +284,17 @@ async function processResults() {
         .from('rounds')
         .select('id')
         .eq('competition_id', activeCompetitionId)
-        .eq('round_number', fixture.gameweek)
+        .eq('round_number', parseInt(fixture.gameweek_id, 10))
         .limit(1)
         .maybeSingle();
 
       if (roundError) {
-        console.warn(`Error finding round for competition ${activeCompetitionId}, gameweek ${fixture.gameweek}:`, roundError);
+        console.warn(`Error finding round for competition ${activeCompetitionId}, gameweek_id ${fixture.gameweek_id}:`, roundError);
         continue;
       }
       
       if (!roundData) {
-        console.warn(`Could not find round for competition ${activeCompetitionId}, gameweek ${fixture.gameweek}. Skipping fixture ${fixture.external_id}.`);
+        console.warn(`Could not find round for competition ${activeCompetitionId}, gameweek_id ${fixture.gameweek_id}. Skipping fixture ${fixture.external_id}.`);
         continue;
       }
       
