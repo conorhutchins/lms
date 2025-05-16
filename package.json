@@ -10,7 +10,14 @@
     "lint": "next lint",
     "update-gameweeks": "tsx scripts/update-gameweek-status/update-gameweek-status.ts",
     "reset-gameweeks": "tsx scripts/reset-gameweek-status/reset-gameweek-status.ts",
-    "update-round-deadlines": "tsx scripts/update-round-deadlines.ts"
+    "update-round-deadlines": "tsx scripts/update-round-deadlines.ts",
+    "test": "jest --config jest.config.cjs",
+    "test:services": "jest --config jest.config.services.cjs",
+    "test:watch": "jest --config jest.config.cjs --watch",
+    "test:services:watch": "jest --config jest.config.services.cjs --watch",
+    "test:coverage": "jest --config jest.config.cjs --coverage",
+    "test:services:coverage": "jest --config jest.config.services.cjs --coverage",
+    "test:all": "npm run test && npm run test:services"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -33,6 +40,7 @@
     "@types/stripe": "^8.0.416",
     "axios": "^1.8.4",
     "class-variance-authority": "^0.7.1",
+    "claude": "^0.0.6",
     "clsx": "^2.1.1",
     "firebase": "^11.4.0",
     "lucide-react": "^0.477.0",
@@ -59,9 +67,13 @@
     "dotenv": "^16.4.7",
     "eslint": "^8",
     "eslint-config-next": "15.0.2",
+    "jest-environment-jsdom": "^29.7.0",
+    "node-cache": "^5.1.2",
+    "node-mocks-http": "^1.17.2",
     "postcss": "^8.5.3",
     "supabase": "^2.20.5",
     "tailwindcss": "^3.4.17",
+    "ts-jest": "^29.3.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.3",
     "typescript": "^5.8.3"

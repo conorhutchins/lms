@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { createServerClient } from '@supabase/ssr';
 import { createApiRouteCookieMethods } from '../../../../lib/utils/supabaseServerHelpers/supabaseServerHelpers';
 import { Database } from '../../../../lib/types/supabase';
-import { roundServices } from '../../../../lib/db/services/roundService';
+import { roundServices } from '../../../../lib/db/services/roundService/roundService';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Only allow GET requests

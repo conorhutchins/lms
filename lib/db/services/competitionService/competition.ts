@@ -5,9 +5,9 @@
 // 3. createCompetition
 // 4. checkIfCompetitionEntryRequiresPayment
 
-import { Database } from '../../types/supabase';
+import { Database } from '../../../types/supabase';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ServiceError, type ServiceResponse } from '../../types/service';
+import { ServiceError, type ServiceResponse } from '../../../types/service';
 
 // Define helper types based on generated ones
 type Competition = Database['public']['Tables']['competitions']['Row'];

@@ -16,12 +16,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
  * @returns A Stripe checkout session object
  */
 export async function createCheckoutSession(userId: string, competitionId?: string, origin?: string) {
-  // Output environment variables for debugging
-  console.log("Environment variables for Stripe:", {
-    STRIPE_DEFAULT_PRICE_ID: process.env.STRIPE_DEFAULT_PRICE_ID,
-    STRIPE_COMPETITION_PRICE_ID: process.env.STRIPE_COMPETITION_PRICE_ID,
-    competitionId,
-  });
+  // Determine which price to use based on competition
 
   // Determine which price to use (default or competition-specific)
   // For test-competition, use a hardcoded price or default price
@@ -30,19 +25,19 @@ export async function createCheckoutSession(userId: string, competitionId?: stri
   if (competitionId === 'test-competition') {
     // This is the test competition - use the default price ID
     priceId = process.env.STRIPE_DEFAULT_PRICE_ID;
-    console.log("As this is just for a test, using default price ID for test competition:", priceId);
+
   } else if (competitionId && process.env.STRIPE_COMPETITION_PRICE_ID) {
     // Real competition with specific price
     priceId = process.env.STRIPE_COMPETITION_PRICE_ID;
-    console.log("Using competition-specific price ID:", priceId);
+
   } else {
     // Fallback to default price
     priceId = process.env.STRIPE_DEFAULT_PRICE_ID;
-    console.log("Using default price ID:", priceId);
+
   }
     
   if (!priceId) {
-    console.error("Price ID not found. Check your environment variables.");
+
     throw new Error('Stripe price ID not configured');
   }
 
